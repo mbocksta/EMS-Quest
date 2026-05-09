@@ -1424,27 +1424,28 @@
          the run-sheet notes for when the player wants to read it without
          squinting. Triggered by clicking the patient notes panel. -->
     <div id="patient-notes-popup" style="display:none; position:fixed;
-         inset:0; background:rgba(0, 0, 0, 0.78); z-index:200;
-         align-items:center; justify-content:center;"
+         inset:0; background:rgba(0, 0, 0, 0.82); z-index:200;
+         align-items:flex-start; justify-content:center;
+         padding:20px; box-sizing:border-box; overflow-y:auto;"
          onclick="closePatientNotesPopup(event)">
-      <div style="background:#0a0a14; border:2px solid #ffd166;
-           border-radius:8px; padding:24px 28px; max-width:680px;
-           width:90%; max-height:85vh; overflow-y:auto;
-           color:#f4f1de; font-family:'Courier New',monospace;
-           font-size:14px; line-height:1.7;
-           box-shadow:0 0 32px rgba(255,209,102,0.25);"
+      <div style="background:#fff; border:2px solid #1a1a2e;
+           border-radius:6px; padding:0; max-width:880px;
+           width:96%; min-height:200px;
+           color:#1a1a2e; font-family:Arial,Helvetica,sans-serif;
+           box-shadow:0 0 32px rgba(0,0,0,0.7); margin:auto;"
            onclick="event.stopPropagation()">
         <div style="display:flex; justify-content:space-between;
-             align-items:center; margin-bottom:18px;
-             padding-bottom:12px; border-bottom:1px solid rgba(255,209,102,0.30);">
-          <span style="color:#ffd166; font-weight:bold; letter-spacing:2px;
-               font-size:14px;">📋 PATIENT NOTES — RUN SHEET</span>
+             align-items:center;
+             padding:10px 16px; background:#1a1a2e; color:#ffd166;
+             border-radius:4px 4px 0 0;">
+          <span style="font-weight:bold; letter-spacing:2px;
+               font-size:13px; font-family:'Courier New',monospace;">📋 PATIENT NOTES</span>
           <button onclick="closePatientNotesPopup()" style="background:none;
                border:1px solid #ffd166; color:#ffd166; padding:4px 12px;
-               font-family:inherit; font-size:12px; cursor:pointer;
+               font-family:'Courier New',monospace; font-size:11px; cursor:pointer;
                border-radius:3px;">CLOSE ✕</button>
         </div>
-        <div id="patient-notes-popup-body" style="white-space:pre-wrap;"></div>
+        <div id="patient-notes-popup-body" style="padding:0;"></div>
       </div>
     </div>
   </div>
@@ -1809,13 +1810,28 @@
         <span class="deco-cross">✚</span>
       </div>
       <h2 style="color:#ffd166; letter-spacing:3px; margin-bottom:18px;">CREDITS</h2>
-      <div style="font-size:14px; line-height:1.7; color:#f4f1de; margin-bottom:24px;">
+      <div style="font-size:14px; line-height:1.7; color:#f4f1de; margin-bottom:18px;">
         This game was vibe coded in Claude<br>
         by <span style="color:#ffd166; font-weight:bold;">Michael Bockstaller</span>!
       </div>
-      <div style="height:1px; background:#3a3a4e; margin:6px 30px 18px;"></div>
-      <h3 style="color:#ffd166; letter-spacing:2px; margin-bottom:12px; font-size:13px;">AUTHOR&rsquo;S NOTE</h3>
-      <div style="font-size:12.5px; line-height:1.7; color:#cfc8a8; font-style:italic; margin-bottom:6px;">
+      <div style="height:1px; background:#3a3a4e; margin:6px 30px 16px;"></div>
+      <h3 style="color:#ffd166; letter-spacing:2px; margin-bottom:10px; font-size:12px;">INSPIRATION</h3>
+      <div style="font-size:12px; line-height:1.6; color:#cfc8a8; margin-bottom:8px;">
+        The review-style quiz portion of this game was heavily inspired by
+        <span style="color:#ffd166; font-weight:bold;">Pocket Prep</span>,
+        but is <b>not affiliated with</b> nor endorsed by Pocket Prep.
+      </div>
+      <div style="height:1px; background:#3a3a4e; margin:6px 30px 16px;"></div>
+      <h3 style="color:#ef476f; letter-spacing:2px; margin-bottom:10px; font-size:12px;">PROTOTYPE NOTICE</h3>
+      <div style="font-size:11.5px; line-height:1.6; color:#f4a8a8; margin-bottom:14px;">
+        This game is a <b>prototype</b>. Expect bugs, edge-case errors,
+        unfinished content, and clinical content that may not perfectly match
+        local protocol. <b>Do not use as a substitute</b> for your protocol manual,
+        official course materials, or your medical director’s guidance.
+      </div>
+      <div style="height:1px; background:#3a3a4e; margin:6px 30px 16px;"></div>
+      <h3 style="color:#ffd166; letter-spacing:2px; margin-bottom:10px; font-size:12px;">AUTHOR&rsquo;S NOTE</h3>
+      <div style="font-size:12px; line-height:1.6; color:#cfc8a8; font-style:italic; margin-bottom:6px;">
         I hope you were able to review your EMS content using this tool!&nbsp;:)<br>
         Thank you for playing!
       </div>
@@ -11590,15 +11606,26 @@ function finishAlsScene() {
   if (typeof a.onComplete === 'function') a.onComplete();
 }
 // Hide / show the contextual E prompt.
+// Stage 2.9.5j: cache last action-prompt text/visibility to skip
+// per-frame DOM writes when nothing changed.
+let _actionPromptCachedText = null;
+let _actionPromptCachedShown = null;
+let _lastDispatchLocText = null;
 function showActionPrompt(text) {
+  if (text === _actionPromptCachedText && _actionPromptCachedShown === true) return;
   const el = document.getElementById('action-prompt');
   if (!el) return;
   el.textContent = text;
   el.style.display = 'block';
+  _actionPromptCachedText = text;
+  _actionPromptCachedShown = true;
 }
 function hideActionPrompt() {
+  if (_actionPromptCachedShown === false) return;
   const el = document.getElementById('action-prompt');
   if (el) el.style.display = 'none';
+  _actionPromptCachedShown = false;
+  _actionPromptCachedText = null;
 }
 function showSceneSafety() {
   const el = document.getElementById('scene-safety');
@@ -14115,49 +14142,58 @@ function pkmCheckRelevance(label, tags, dispatch) {
 // Stage 2.0h: Patient Notes panel rendering. Populated after at least one
 // TREAT action so the player has a reference card while talking to ALS /
 // medical command / the patient — like a quick run sheet.
+// Stage 2.9.5j: cache last-rendered HTML to avoid setting innerHTML
+// every frame during an encounter (was a measurable per-frame perf hit).
+let _patientNotesCachedSig = null;
+let _patientNotesCachedHtml = null;
 function updatePatientNotes() {
   const panel = document.getElementById('patient-notes');
   const body = document.getElementById('patient-notes-body');
   if (!panel || !body) return;
   // Hide between calls and when no patient interaction has begun.
   if (!game.pkm || game.mode === 'driving' || !game.destination) {
-    panel.style.display = 'none';
+    if (panel.style.display !== 'none') panel.style.display = 'none';
+    _patientNotesCachedSig = null;
     return;
   }
+  // Stage 2.9.5j: always show during an encounter \u2014 not gated on
+  // treatments. A refusal might have zero treatments but still needs
+  // the notes (which become the refusal form on click-to-expand).
   const taken = game.pkm.actionsTaken || [];
   const treats = taken.filter(a => a.category === 'treat');
-  if (treats.length === 0) { panel.style.display = 'none'; return; }
-  // Tally treatments by label (with repeat count)
-  const counts = {};
-  treats.forEach(a => { counts[a.label] = (counts[a.label] || 0) + 1; });
-  const treatRows = Object.keys(counts).map(label => {
-    const n = counts[label];
-    return '\u2022 ' + label + (n > 1 ? ' (\u00d7' + n + ')' : '');
-  }).join('<br>');
-  // Pull condition + current HP fraction
   const profile = game.pkm.profile;
   const dispatch0 = game.destination && game.destination.dispatch;
   const cond = (dispatch0 && dispatch0.title) ||
                (profile && profile.label) || 'undifferentiated';
   const hpFrac = Math.round((game.pkm.ptHpPct || 0) / Math.max(1, game.pkm.ptHpMax || 100) * 100);
-  // Pull current vitals snapshot
   const vit = pkmCurrentVitals() || '\u2014 not yet measured \u2014';
-  // Stage 2.9.5e: patient notes mirror the CMU EMS refusal form sections
-  // \u2014 PMHx (pertinent medical history), Allergies, Medications.
-  // These come from the patient profile when populated; otherwise we
-  // show a small placeholder so the field is visible and the player
-  // knows to ask SAMPLE/OPQRST during the encounter.
   const pmhx     = (profile && profile.pmhx)        || '\u2014 ask pertinent medical history \u2014';
   const allergy  = (profile && profile.allergies)   || '\u2014 ask allergies \u2014';
   const meds     = (profile && profile.medications) || '\u2014 ask medications \u2014';
-  // Stage 2.9.5e: receiving facility \u2014 only filled in when the player
-  // has actually selected a hospital. Don't auto-fill from
-  // dispatch.correctHospital (that's the answer key, not the player's
-  // choice).
   let hosp = '\u2014 pending \u2014';
   if (game.destination && game.destination.kind === 'hospital' && game.destination.hospital) {
     hosp = game.destination.hospital.name || game.destination.hospital.code || hosp;
   }
+  // Build a cheap signature of all rendered fields. If the signature
+  // matches the previous frame's, skip the entire DOM mutation \u2014
+  // which is the slow part. Profile mutations (SAMPLE/OPQRST writes)
+  // call updatePatientNotes() explicitly, so they'll always be reflected.
+  const sig = treats.length + '|' + cond + '|' + hpFrac + '|' + vit +
+              '|' + pmhx + '|' + allergy + '|' + meds + '|' + hosp;
+  if (sig === _patientNotesCachedSig) {
+    if (panel.style.display !== 'block') panel.style.display = 'block';
+    return;
+  }
+  _patientNotesCachedSig = sig;
+  // Tally treatments by label (with repeat count)
+  const counts = {};
+  treats.forEach(a => { counts[a.label] = (counts[a.label] || 0) + 1; });
+  const treatRows = treats.length === 0
+    ? '<span style="color:#a0a0b0;">\u2014 none recorded \u2014</span>'
+    : Object.keys(counts).map(label => {
+        const n = counts[label];
+        return '\u2022 ' + label + (n > 1 ? ' (\u00d7' + n + ')' : '');
+      }).join('<br>');
   const html =
     '<div><b>Pt:</b> ' + (cond) + ' \u2014 ' +
       '<span style="color:' + (hpFrac < 30 ? '#ef4444' : hpFrac < 60 ? '#ffa030' : '#06d6a0') + ';">' +
@@ -14168,6 +14204,7 @@ function updatePatientNotes() {
     '<div style="margin-top:4px;"><b>Medications:</b> ' + meds + '</div>' +
     '<div style="margin-top:4px;"><b>Treatments:</b><br>' + treatRows + '</div>' +
     '<div style="margin-top:4px;"><b>Receiving:</b> ' + hosp + '</div>';
+  _patientNotesCachedHtml = html;
   body.innerHTML = html;
   panel.style.display = 'block';
   // Refresh the popup if it's open, using the form-style renderer.
@@ -14181,6 +14218,9 @@ function updatePatientNotes() {
 // Pittsburgh Transfer of Care form when handing off to ALS / hospital,
 // or a generic run-sheet otherwise. Vitals + history + treatments
 // flow into the form fields the EMS provider would actually fill out.
+// Stage 2.9.5k fix: the script is wrapped in an IIFE, so inline
+// onclick="openPatientNotesPopup()" handlers couldn't see the function.
+// Hoist these onto window so the inline handlers actually fire.
 function openPatientNotesPopup() {
   const popup = document.getElementById('patient-notes-popup');
   if (!popup) return;
@@ -14194,13 +14234,31 @@ function closePatientNotesPopup(e) {
   const popup = document.getElementById('patient-notes-popup');
   if (popup) popup.style.display = 'none';
 }
+window.openPatientNotesPopup = openPatientNotesPopup;
+window.closePatientNotesPopup = closePatientNotesPopup;
 // Build the maximized view based on current call kind.
 function _renderPatientNotesPopupBody() {
   const body = document.getElementById('patient-notes-popup-body');
   if (!body) return;
   const dispatch = (game.destination && game.destination.dispatch) || null;
   const profile = (game.pkm && game.pkm.profile) || {};
-  const kind = (game.destination && game.destination.kind) || '';
+  // Stage 2.9.5j: detect refusal vs ALS context. destination.kind is
+  // 'call' or 'hospital' during active gameplay; the actual disposition
+  // ('refusal' / 'als' / 'transport') only lands in sceneState.dispositions
+  // AFTER the player commits. So we infer:
+  //   - REFUSAL view: a refusal speech is in progress (chatState.patientActive)
+  //                   OR the most recent disposition was 'refusal'
+  //   - ALS view:    destination is a hospital handoff OR the call has
+  //                  been flagged as an ALS handoff
+  //   - RUN SHEET:   default
+  const dispoList = (game.sceneState && game.sceneState.dispositions) || [];
+  const lastDispo = dispoList.length ? dispoList[dispoList.length - 1] : null;
+  const refusalActive = !!(chatState && chatState.patientActive);
+  const isRefusal = refusalActive || (lastDispo && lastDispo.kind === 'refusal');
+  const alsActive = !!(chatState && chatState.medicActive);
+  const isAlsContext = alsActive ||
+    (lastDispo && lastDispo.kind === 'als') ||
+    (game.destination && game.destination.kind === 'hospital');
   // Pull facts.
   const cc      = (dispatch && dispatch.title) || '\u2014';
   const erating = (dispatch && dispatch.erating) || '';
@@ -14232,9 +14290,8 @@ function _renderPatientNotesPopupBody() {
   // Determine which form to render.
   // 'refusal' kind == CMU Refusal Form. Hospital + ALS handoff context
   // == Transfer of Care Form. Otherwise generic run-sheet view.
-  const isAlsContext = (kind === 'als') ||
-    (kind === 'hospital' && (dispatch && (dispatch.alsCriteria || (dispatch.tags || []).indexOf('cardiac') !== -1)));
-  if (kind === 'refusal') {
+  // (isRefusal and isAlsContext are computed at the top of this function.)
+  if (isRefusal) {
     body.innerHTML = _renderRefusalForm({
       cc, desc, erating, pmhx, allergy, meds, lastOral, events,
       signs, vit, treats, vitalsHistory,
@@ -14254,165 +14311,531 @@ function _renderPatientNotesPopupBody() {
     });
   }
 }
-// CMU EMS Refusal of Transport / Treatment Form
+// CMU EMS Refusal of Transport / Treatment Form \u2014 styled to match
+// the actual paper document (heading, signature block layout, sidebar
+// stamps, checkbox sections).
 function _renderRefusalForm(d) {
-  const refusalSlots = (chatState && chatState.patientRefusal) || {};
-  const cb = (filled) => filled ? '<span style="color:#06d6a0;">\u2611</span>' : '<span style="color:#a0a0b0;">\u2610</span>';
-  const treatRows = d.treats && d.treats.length
-    ? d.treats.map(t => '<div style="margin-left:14px;">\u2022 ' + t.label + '</div>').join('')
-    : '<div style="margin-left:14px; color:#a0a0b0;">\u2014 none recorded \u2014</div>';
+  // Stage 2.9.5j: source the slot tracker from chatState.patientProgress
+  // (the actual ref the speech logic mutates), not patientRefusal.
+  const refusalSlots = (chatState && chatState.patientProgress) || {};
+  const cb = (filled) => filled
+    ? '<span style="color:#1a1a2e;font-size:13px;font-weight:bold;">\u2611</span>'
+    : '<span style="color:#9098a8;font-size:13px;">\u2610</span>';
+  // Vital sign helpers
+  const vitParts = (d.vit || '').split(/\s+/);
+  const hrV   = (d.vit || '').match(/HR\s*([\d/]+)/i);
+  const bpV   = (d.vit || '').match(/BP\s*([\d/]+)/i);
+  const rrV   = (d.vit || '').match(/RR\s*([\d]+)/i);
+  const spo2V = (d.vit || '').match(/SpO[\u2082]?\s*([\d]+)/i);
+  // Risk-flag detection from vitals/dispatch
+  const flagChestPain = /chest pain/i.test((d.cc || '') + ' ' + (d.desc || ''));
+  const flagHeadInj   = /head|concussion|tbi/i.test((d.cc || '') + ' ' + (d.desc || ''));
+  const flagSob       = /sob|dyspn|breath/i.test((d.cc || '') + ' ' + (d.desc || ''));
+  const flagAloc      = /altered|aloc|ams|conscious/i.test((d.cc || '') + ' ' + (d.desc || ''));
+  const flagSync      = /syncop|fainted|passed out/i.test((d.cc || '') + ' ' + (d.desc || ''));
+  const flagIntox     = /intox|drunk|etoh|drug/i.test((d.cc || '') + ' ' + (d.desc || ''));
+  const flagSuicide   = /suicid|self.harm/i.test((d.cc || '') + ' ' + (d.desc || ''));
+  const flagSerious   = /serious|severe|critical/i.test((d.cc || '') + ' ' + (d.desc || ''));
+  const flagMental    = /mental.illness|psych/i.test((d.cc || '') + ' ' + (d.desc || ''));
+  const flagPedi      = /minor|child|peds|pediatric/i.test((d.cc || '') + ' ' + (d.desc || ''));
+  // Numeric-vital flags
+  const rrNum = rrV ? parseInt(rrV[1], 10) : null;
+  const hrNum = hrV && /^\d+$/.test(hrV[1]) ? parseInt(hrV[1], 10) : null;
+  const sbpNum = bpV ? parseInt(bpV[1].split('/')[0], 10) : null;
+  const dbpNum = bpV && bpV[1].split('/')[1] ? parseInt(bpV[1].split('/')[1], 10) : null;
+  const spo2Num = spo2V ? parseInt(spo2V[1], 10) : null;
+  const flagRRabnl   = rrNum !== null && (rrNum < 12 || rrNum > 24);
+  const flagHRabnl   = hrNum !== null && (hrNum < 50 || hrNum > 100);
+  const flagSBPabnl  = sbpNum !== null && (sbpNum < 100 || sbpNum > 200);
+  const flagDBPabnl  = dbpNum !== null && (dbpNum < 50 || dbpNum > 100);
+  const flagSpO2abnl = spo2Num !== null && spo2Num < 95;
+  // Helper for "____" blanks (overflow-wrapping enabled so long
+  // chief-complaint titles don't blow out the column).
+  const blank = (val, w) => val
+    ? '<span style="border-bottom:1px solid #1a1a2e; padding:0 4px; ' +
+        'display:inline-block; max-width:100%; word-break:break-word; ' +
+        'vertical-align:bottom; min-width:' + Math.min(w || 80, 60) + 'px;">' + val + '</span>'
+    : '<span style="border-bottom:1px solid #1a1a2e; display:inline-block; ' +
+        'width:' + (w || 80) + 'px; max-width:100%; height:13px;">&nbsp;</span>';
+  const treatRows = (d.treats && d.treats.length)
+    ? d.treats.map(t => '\u2022 ' + t.label).join('<br>')
+    : '\u2014';
   return (
-    '<div style="background:#fff; color:#1a1a2e; padding:18px 22px; ' +
-      'font-family:Times,serif; font-size:12px; line-height:1.5; ' +
-      'border:2px solid #1a1a2e; border-radius:4px;">' +
-      '<div style="text-align:center; font-weight:bold; font-size:13px; ' +
+    '<div style="padding:20px 28px; font-family:Arial,Helvetica,sans-serif; ' +
+      'font-size:11px; line-height:1.45; color:#1a1a2e;">' +
+      // ----- Title block -----
+      '<div style="text-align:center; font-weight:bold; font-size:14px; ' +
         'text-decoration:underline; margin-bottom:2px;">REFUSAL OF TRANSPORT/TREATMENT FORM</div>' +
-      '<div style="text-align:center; font-weight:bold; font-size:11px; ' +
-        'margin-bottom:10px;">CARNEGIE MELLON UNIVERSITY EMERGENCY MEDICAL SERVICE \u2014 SERVICE ID # 02303</div>' +
-      '<div><b>PATIENT NAME:</b> ____________________________</div>' +
-      '<div><b>CHIEF COMPLAINT:</b> ' + d.cc + '</div>' +
-      '<div><b>SITUATION OVERVIEW:</b> ' + (d.desc || '\u2014') + '</div>' +
-      '<div style="margin-top:6px;"><b>PMHx:</b> ' + d.pmhx + '</div>' +
-      '<div><b>Allergies:</b> ' + d.allergy + '</div>' +
-      '<div><b>Medications:</b> ' + d.meds + '</div>' +
-      '<div style="margin-top:8px; padding:6px 8px; background:#f0f4f8; ' +
-        'border:1px solid #c0c8d0;">' +
-        '<div style="text-align:center; font-weight:bold; font-size:11px; ' +
-          'margin-bottom:4px;">CALLS INVOLVING ANY OF THE FOLLOWING REQUIRE MEDICAL COMMAND CONSULT</div>' +
-        '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:2px; font-size:11px;">' +
-          '<div>CHEST PAIN: ' + cb(false) + '</div>' +
-          '<div>HEAD INJURY: ' + cb(false) + '</div>' +
-          '<div>RESPS abnl: ' + cb(false) + '</div>' +
-          '<div>SOB/DYSPNEA: ' + cb(false) + '</div>' +
-          '<div>ALOC/CAO&lt;4: ' + cb(false) + '</div>' +
-          '<div>PULSE abnl: ' + cb(false) + '</div>' +
-          '<div>SERIOUS ILLNESS: ' + cb(false) + '</div>' +
-          '<div>SYNCOPE: ' + cb(false) + '</div>' +
-          '<div>SBP abnl: ' + cb(false) + '</div>' +
-          '<div>DRUGS/INTOX: ' + cb(false) + '</div>' +
-          '<div>SUICIDE: ' + cb(false) + '</div>' +
-          '<div>DBP abnl: ' + cb(false) + '</div>' +
+      '<div style="text-align:center; font-weight:bold; font-size:12px; ' +
+        'margin-bottom:14px;">CARNEGIE MELLON UNIVERSITY EMERGENCY MEDICAL SERVICE \u2014 SERVICE ID # 02303</div>' +
+      // ----- Two-column header (patient identifiers + sidebar stamps) -----
+      '<div style="display:grid; grid-template-columns:1fr 130px; gap:12px;">' +
+        '<div>' +
+          '<div style="margin-bottom:6px;"><b>PATIENT NAME:</b> ' + blank(null, 240) + '</div>' +
+          '<div style="margin-bottom:6px;"><b>PARENT/GUARDIAN NAME</b> <i>(IF MINOR)</i>: ' + blank(null, 220) + '</div>' +
+          '<div style="margin-bottom:6px;"><b>ADDRESS:</b> ' + blank(null, 240) + '</div>' +
+          '<div style="margin-bottom:6px;"><b>CITY, STATE, ZIP:</b> ' + blank(null, 200) + '</div>' +
+          '<div style="margin-bottom:6px;"><b>INCIDENT LOCATION:</b> ' + blank(d.desc && d.desc.match(/at\s+([^.,]+)/i) ? RegExp.$1 : null, 220) + '</div>' +
+          '<div style="margin-bottom:6px;"><b>CHIEF COMPLAINT:</b> ' + blank(d.cc, 240) + '</div>' +
+          '<div style="margin-bottom:6px;"><b>SITUATION OVERVIEW:</b> ' + blank(d.desc, 280) + '</div>' +
+          '<div style="margin-bottom:6px;"><b>PMHx:</b> ' + blank(d.pmhx, 280) + '</div>' +
+        '</div>' +
+        '<div style="background:#dceaf3; padding:6px 10px; border:1px solid #1a1a2e;">' +
+          '<div style="font-weight:bold; font-size:10px; padding:4px 0; border-bottom:1px solid #5a7a90;">DATE</div>' +
+          '<div style="height:18px;"></div>' +
+          '<div style="font-weight:bold; font-size:10px; padding:4px 0; border-top:1px solid #5a7a90; border-bottom:1px solid #5a7a90;">CALL #</div>' +
+          '<div style="height:18px;"></div>' +
+          '<div style="font-weight:bold; font-size:10px; padding:4px 0; border-bottom:1px solid #5a7a90;">CREW CHIEF</div>' +
+          '<div style="height:18px;"></div>' +
+          '<div style="font-weight:bold; font-size:10px; padding:4px 0; border-top:1px solid #5a7a90; border-bottom:1px solid #5a7a90;">DISPATCH</div>' +
+          '<div style="height:18px;"></div>' +
+          '<div style="font-weight:bold; font-size:10px; padding:4px 0; border-bottom:1px solid #5a7a90;">ONSCENE</div>' +
+          '<div style="height:18px;"></div>' +
+          '<div style="font-weight:bold; font-size:10px; padding:4px 0; border-top:1px solid #5a7a90;">CLEAR</div>' +
         '</div>' +
       '</div>' +
-      '<div style="margin-top:6px;"><b>PATIENT HAS DECISION-MAKING CAPACITY:</b> ' +
-        cb(true) + ' YES &nbsp; ' + cb(false) + ' NO &nbsp; ' + cb(false) + ' UNCERTAIN</div>' +
-      '<div style="margin-top:8px; padding:6px 8px; border:1px solid #c0c8d0; ' +
-        'background:#f8f8f8;">' +
-        '<div style="font-weight:bold; margin-bottom:2px;">DISPOSITION</div>' +
-        '<div>' + cb(true) + ' PATIENT REFUSES TREATMENT AND/OR TRANSPORT AGAINST EMS ADVICE</div>' +
-        '<div>' + cb(!!refusalSlots.identity) + ' Patient told you\u2019re an EMT (not a doctor)</div>' +
-        '<div>' + cb(!!refusalSlots.tools) + ' Limited diagnostic tools explained</div>' +
-        '<div>' + cb(!!refusalSlots.risks) + ' Risks (worsening / disability / death) explained</div>' +
-        '<div>' + cb(!!refusalSlots.advice) + ' Home-care advice given</div>' +
+      // ----- "Calls involving any of the following require Medical Command Consult" -----
+      '<div style="border:2px solid #1a1a2e; margin-top:10px;">' +
+        '<div style="background:#dceaf3; text-align:center; padding:5px; ' +
+          'font-weight:bold; font-size:11px; border-bottom:1px solid #1a1a2e;">' +
+          'CALLS INVOLVING ANY OF THE FOLLOWING REQUIRE MEDICAL COMMAND CONSULT</div>' +
+        '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; ' +
+          'gap:4px 12px; padding:8px 12px; font-size:11px;">' +
+          '<div>CHEST PAIN: ' + cb(flagChestPain) + ' YES &nbsp; ' + cb(!flagChestPain) + ' NO</div>' +
+          '<div>HEAD INJURY: ' + cb(flagHeadInj) + ' YES &nbsp; ' + cb(!flagHeadInj) + ' NO</div>' +
+          '<div>RESPS (&lt;12 OR &gt;24): ' + (rrV ? rrV[1] : '__') + ' &nbsp; ' + cb(flagRRabnl) + ' YES &nbsp; ' + cb(!flagRRabnl) + ' NO</div>' +
+          '<div>SOB/DYSPNEA: ' + cb(flagSob) + ' YES &nbsp; ' + cb(!flagSob) + ' NO</div>' +
+          '<div>ALOC OR CAO &lt; 4: ' + cb(flagAloc) + ' YES &nbsp; ' + cb(!flagAloc) + ' NO</div>' +
+          '<div>PULSE (&lt;50 OR &gt;100): ' + (hrV ? hrV[1] : '__') + ' &nbsp; ' + cb(flagHRabnl) + ' YES &nbsp; ' + cb(!flagHRabnl) + ' NO</div>' +
+          '<div>SERIOUS ILLNESS/INJURY: ' + cb(flagSerious) + ' YES &nbsp; ' + cb(!flagSerious) + ' NO</div>' +
+          '<div>SYNCOPE: ' + cb(flagSync) + ' YES &nbsp; ' + cb(!flagSync) + ' NO</div>' +
+          '<div>SBP (&lt;100 OR &gt;200): ' + (bpV ? bpV[1].split('/')[0] : '__') + ' &nbsp; ' + cb(flagSBPabnl) + ' YES &nbsp; ' + cb(!flagSBPabnl) + ' NO</div>' +
+          '<div>DRUGS/INTOXICATION: ' + cb(flagIntox) + ' YES &nbsp; ' + cb(!flagIntox) + ' NO</div>' +
+          '<div>SUICIDE ATTEMPT: ' + cb(flagSuicide) + ' YES &nbsp; ' + cb(!flagSuicide) + ' NO</div>' +
+          '<div>DBP (&lt;50 OR &gt;100): ' + (bpV && bpV[1].split('/')[1] ? bpV[1].split('/')[1] : '__') + ' &nbsp; ' + cb(flagDBPabnl) + ' YES &nbsp; ' + cb(!flagDBPabnl) + ' NO</div>' +
+          '<div>PARENT NOT ON SCENE? <i>(MINOR)</i>: ' + cb(false) + ' YES &nbsp; ' + cb(!flagPedi) + ' NO</div>' +
+          '<div>MENTAL ILLNESS: ' + cb(flagMental) + ' YES &nbsp; ' + cb(!flagMental) + ' NO</div>' +
+          '<div>SpO2 (&lt;95%): ' + (spo2V ? spo2V[1] : '__') + ' &nbsp; ' + cb(flagSpO2abnl) + ' YES &nbsp; ' + cb(!flagSpO2abnl) + ' NO</div>' +
+        '</div>' +
+        '<div style="border-top:1px solid #1a1a2e; padding:6px 12px; ' +
+          'background:#dceaf3; font-weight:bold; font-size:11px;">' +
+          'PATIENT HAS DECISION-MAKING CAPACITY (QUESTIONS #1-#8 ON BACK): &nbsp;&nbsp; ' +
+          cb(true) + ' YES &nbsp; ' + cb(false) + ' NO &nbsp; ' + cb(false) + ' UNCERTAIN' +
+        '</div>' +
+        '<div style="border-top:1px solid #1a1a2e; padding:6px 12px; font-size:11px;">' +
+          cb(false) + ' <b>MEDICAL COMMAND CONSULTED</b> &nbsp;&nbsp; ' +
+          'FACILITY: ' + cb(false) + ' UPMC &nbsp; ' + cb(false) + ' OTHER: ' + blank(null, 120) +
+          '<div style="margin-top:4px;">MD#: ' + blank(null, 100) + ' &nbsp; ORDERS: ' + blank(null, 200) + ' &nbsp; TIME: ' + blank(null, 60) + '</div>' +
+          '<div style="margin-top:4px;">' + cb(false) + ' PATIENT SPOKE TO MEDICAL COMMAND PHYSICIAN &nbsp;&nbsp;&nbsp; ' +
+          cb(false) + ' MEDICAL COMMAND PHYSICIAN ON SCENE</div>' +
+        '</div>' +
       '</div>' +
-      '<div style="margin-top:8px;"><b>VITALS:</b> ' + d.vit + '</div>' +
-      '<div style="margin-top:6px;"><b>HPI / OPQRST:</b> ' +
-        'Onset: ' + d.onset + ' &nbsp;|&nbsp; Quality: ' + d.quality +
-        ' &nbsp;|&nbsp; Severity: ' + d.severity + '</div>' +
-      '<div style="margin-top:6px;"><b>EMS Treatments rendered:</b><br>' + treatRows + '</div>' +
-      '<div style="margin-top:10px; font-size:10px; color:#5a5a64; ' +
-        'border-top:1px solid #c0c8d0; padding-top:6px;">' +
-        'I recognize there may be a serious injury or illness which could get worse without ' +
-        'medical attention even though I may feel fine at the present time. I understand ' +
-        'I may change my mind and call 412-268-2323 (on campus) or 911 (anywhere) if ' +
-        'treatment or assistance is needed later.' +
+      // ----- DISPOSITION + RISKS two columns -----
+      '<div style="border:2px solid #1a1a2e; border-top:0; ' +
+        'display:grid; grid-template-columns:1fr 1fr;">' +
+        '<div style="padding:8px 12px; border-right:1px solid #1a1a2e;">' +
+          '<div style="font-weight:bold; font-size:12px; color:#5a7a90; margin-bottom:6px;">DISPOSITION</div>' +
+          '<div style="background:#dceaf3; padding:4px 6px; margin:3px 0;">' +
+            cb(true) + ' <b>PATIENT REFUSES TREATMENT AND/OR TRANSPORT AGAINST EMS ADVICE</b> ' +
+            '<i>(CONTACT COMMAND)</i></div>' +
+          '<div style="margin:3px 0;">' + cb(false) + ' PATIENT REFUSES SPECIFIC TREATMENT ' + blank(null, 120) + '</div>' +
+          '<div style="margin:3px 0;">' + cb(false) + ' PATIENT REFUSES EMS TRANSPORT, EMS BELIEVES<br>&nbsp;&nbsp;&nbsp;&nbsp; ALTERNATIVE PLAN REASONABLE</div>' +
+          '<div style="margin:3px 0 3px 22px;">' + cb(false) + ' TRANSPORTED BY PRIVATELY OWNED VEHICLE</div>' +
+          '<div style="margin:3px 0 3px 22px;">' + cb(false) + ' TRANSPORTED BY CARNEGIE MELLON POLICE</div>' +
+          '<div style="margin:3px 0 3px 22px;">TRANSPORTED TO: ' + blank(null, 140) + '</div>' +
+          '<div style="margin:3px 0;">' + cb(false) + ' PATIENT NOT TRANSPORTED</div>' +
+        '</div>' +
+        '<div style="padding:8px 12px;">' +
+          '<div style="font-weight:bold; font-size:12px; color:#5a7a90; margin-bottom:6px;">' +
+            'RISKS &nbsp;&nbsp; <span style="font-size:10px; font-weight:normal;">Explained to: ' +
+            cb(true) + ' PATIENT &nbsp; ' + cb(flagPedi) + ' PARENT/GUARDIAN</span></div>' +
+          '<div style="margin:3px 0;">' + cb(!!refusalSlots.risks) +
+            ' <b>RISKS EXPLAINED:</b> that the pre-hospital provider can not perform an ' +
+            'extensive exam and evaluation and therefore an underlying illness or injury may be ' +
+            'missed that may lead to disability and/or death</div>' +
+          '<div style="margin:3px 0;">' + cb(!!refusalSlots.advice) +
+            ' <b>RECEIVED INSTRUCTIONS FOR:</b></div>' +
+          '<div style="margin-left:22px; font-size:10px;">' +
+            cb(false) + ' HEAD INJ. &nbsp; ' + cb(false) + ' FEVER &nbsp; ' +
+            cb(false) + ' MUSC. PAIN &nbsp; ' + cb(false) + ' WOUND CARE &nbsp; ' +
+            cb(false) + ' RICE &nbsp; ' + cb(false) + ' BURN CARE<br>' +
+            cb(false) + ' ABD. PAIN &nbsp; ' + cb(false) + ' STNGS &nbsp; ' +
+            cb(false) + ' ALG. REACT. &nbsp; ' + cb(false) + ' DIABETES &nbsp; ' +
+            cb(false) + ' OTHER: ' + blank(null, 60) +
+          '</div>' +
+          '<div style="margin:6px 0;">' + cb(false) + ' <b>PATIENT PLAN FOR FURTHER MEDICAL EVALUATION</b></div>' +
+          '<div style="margin-left:22px; font-size:10px;">' +
+            cb(false) + ' PCP &nbsp; ' + cb(false) + ' CMU HEALTH SERVICES &nbsp; ' + cb(false) + ' OTHER: ' + blank(null, 80) + '<br>' +
+            cb(false) + ' EMS &nbsp; ' + cb(false) + ' POV TO ER &nbsp; ' + cb(false) + ' POV TO URGENT CARE' +
+          '</div>' +
+          '<div style="margin:6px 0;">' + cb(!!(refusalSlots.identity && refusalSlots.tools)) +
+            ' <b>PATIENT OR PARENT/GUARDIAN VERBALIZES UNDERSTANDING OF RISKS AND CLINICAL SITUATION</b></div>' +
+        '</div>' +
       '</div>' +
-      '<div style="margin-top:14px; display:grid; grid-template-columns:1fr 1fr; gap:14px;">' +
-        '<div><b>Patient/Guardian Signature:</b> _______________</div>' +
-        '<div><b>Witness Signature:</b> _______________</div>' +
-        '<div><b>EMS Provider Signature:</b> _______________</div>' +
-        '<div><b>Cert # / EMT-B / Other:</b> _______________</div>' +
+      // ----- Vitals quick reference (not on the original form, but useful) -----
+      '<div style="margin-top:10px; padding:8px 12px; background:#f0f0f0; ' +
+        'border:1px solid #c0c0c0; font-size:11px;">' +
+        '<b>VITALS:</b> ' + (d.vit || '\u2014 not yet measured \u2014') +
+        ' &nbsp;&nbsp; <b>EMS TREATMENTS:</b> ' + treatRows +
+      '</div>' +
+      // ----- Body paragraphs -----
+      '<div style="margin-top:10px; font-size:10px; line-height:1.5;">' +
+        'This form is being provided to me because I have refused assessment and/or treatment by ' +
+        'Carnegie Mellon University (CMU) EMS and/or transport by an ambulance. I understand ' +
+        'that CMU EMS personnel are not physicians and are not qualified or authorized to make a ' +
+        'diagnosis and that their care is not a substitute for that of a physician.' +
+      '</div>' +
+      '<div style="margin-top:8px; font-size:10px; line-height:1.5;">' +
+        'I recognize that there may be a serious injury or illness which could get worse without ' +
+        'medical attention even though I may feel fine at the present time. I understand that I may ' +
+        'change my mind and call <b>(412) 268-2323</b> (on campus) or <b>911</b> (anywhere) if treatment or ' +
+        'assistance is needed later. I understand that treatment is available at an Emergency ' +
+        'Department 24 hours a day.' +
+      '</div>' +
+      '<div style="margin-top:8px; font-size:10px; line-height:1.5;">' +
+        'I acknowledge this advice has been explained to me by CMU EMS personnel and that I have ' +
+        'read this form completely and understand its terms. I ALSO RELEASE CARNEGIE MELLON ' +
+        'UNIVERSITY, CMU EMS, CMU POLICE, AND THE MEDICAL COMMAND FACILITY AND ANY AND ALL PERSONS ' +
+        'WORKING WITH OR FOR THESE ENTITIES FROM ANY CLAIM RELATED TO MY REFUSAL OF TREATMENT ' +
+        'OR TRANSPORT.' +
+      '</div>' +
+      // ----- Signature block -----
+      '<div style="margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:14px;">' +
+        '<div style="border-bottom:1px solid #1a1a2e; padding-bottom:2px; height:30px;"></div>' +
+        '<div style="border-bottom:1px solid #1a1a2e; padding-bottom:2px; height:30px;"></div>' +
+        '<div style="text-align:center; font-weight:bold; font-size:11px;">Patient/Guardian Signature</div>' +
+        '<div style="text-align:center; font-weight:bold; font-size:11px;">Witness Signature</div>' +
+      '</div>' +
+      '<div style="margin-top:14px; display:grid; grid-template-columns:1fr 100px 100px 1fr; gap:14px; align-items:end;">' +
+        '<div style="border-bottom:1px solid #1a1a2e; padding-bottom:2px; height:30px;"></div>' +
+        '<div style="border-bottom:1px solid #1a1a2e; padding-bottom:2px; height:30px;"></div>' +
+        '<div style="border-bottom:1px solid #1a1a2e; padding-bottom:2px; height:30px;"></div>' +
+        '<div style="border-bottom:1px solid #1a1a2e; padding-bottom:2px; height:30px;"></div>' +
+        '<div style="text-align:center; font-weight:bold; font-size:11px;">EMS Provider Signature</div>' +
+        '<div style="text-align:center; font-weight:bold; font-size:11px;">Certification #</div>' +
+        '<div style="text-align:center; font-weight:bold; font-size:11px;">' + cb(game.role === 'EMT' || game.role === 'CEMS') + ' EMT-B &nbsp; ' + cb(false) + ' Other</div>' +
+        '<div style="text-align:center; font-weight:bold; font-size:11px;">Date/Time</div>' +
       '</div>' +
     '</div>'
   );
 }
-// City of Pittsburgh Bureau of EMS Transfer of Care Form
+// City of Pittsburgh Bureau of EMS Transfer of Care Form \u2014 styled
+// to mirror the actual Pennsylvania Dept of Health document with the
+// PA logo + Pittsburgh EMS shield, blue section banners, vital signs
+// table with AVPU checkboxes, EMS treatment table, and the cardiac
+// arrest sidebar block.
 function _renderTransferOfCareForm(d) {
-  const cb = (filled) => filled ? '<span style="color:#06d6a0;">\u2611</span>' : '<span style="color:#a0a0b0;">\u2610</span>';
-  const treatRows = d.treats && d.treats.length
-    ? d.treats.map(t => '<tr><td style="padding:2px 6px; border:1px solid #a0c8d8;">\u2014</td>' +
-                          '<td style="padding:2px 6px; border:1px solid #a0c8d8;">' + t.label + '</td>' +
-                          '<td style="padding:2px 6px; border:1px solid #a0c8d8;">\u2014</td></tr>').join('')
-    : '<tr><td colspan="3" style="padding:6px; text-align:center; color:#a0a0b0; ' +
-      'border:1px solid #a0c8d8;">\u2014 none recorded \u2014</td></tr>';
-  // Vitals row \u2014 we just have one current snapshot, fill it in if present.
-  const vitParts = (d.vit || '').split(/\s+/);
-  const vitalRow =
+  const cb = (filled) => filled
+    ? '<span style="color:#1a1a2e;font-size:13px;font-weight:bold;">\u2611</span>'
+    : '<span style="color:#9098a8;font-size:13px;">\u2610</span>';
+  const blank = (val, w) => val
+    ? '<span style="border-bottom:1px solid #1a1a2e; padding:0 4px; ' +
+        'display:inline-block; max-width:100%; word-break:break-word; ' +
+        'vertical-align:bottom; min-width:' + Math.min(w || 80, 60) + 'px;">' + val + '</span>'
+    : '<span style="border-bottom:1px solid #1a1a2e; display:inline-block; ' +
+        'width:' + (w || 80) + 'px; max-width:100%; height:13px;">&nbsp;</span>';
+  // Parse vitals
+  const hrV   = (d.vit || '').match(/HR\s*([\d/]+)/i);
+  const bpV   = (d.vit || '').match(/BP\s*([\d/]+)/i);
+  const rrV   = (d.vit || '').match(/RR\s*([\d]+)/i);
+  const spo2V = (d.vit || '').match(/SpO[\u2082]?\s*([\d]+)/i);
+  // Past medical history checkbox set
+  const pmhxLow = (d.pmhx || '').toLowerCase();
+  const hasDM    = /diabet|dm\b/.test(pmhxLow);
+  const hasHTN   = /htn|hypertens/.test(pmhxLow);
+  const hasHeart = /stent|cad|chf|mi\b|cardiac/.test(pmhxLow);
+  const hasCancer= /cancer|onco/.test(pmhxLow);
+  const hasSeiz  = /seizure|epilep/.test(pmhxLow);
+  const hasAsthma= /asthma|copd/.test(pmhxLow);
+  const hasStroke= /stroke|tia/.test(pmhxLow);
+  const hasOther = !hasDM && !hasHTN && !hasHeart && !hasCancer && !hasSeiz && !hasAsthma && !hasStroke && (d.pmhx && d.pmhx !== '\u2014 not asked \u2014');
+  // Cardiac/altered/stroke flag detection from chief complaint
+  const ccLow = ((d.cc || '') + ' ' + (d.desc || '')).toLowerCase();
+  const isCardiacChest = /chest pain|cardiac|acs|stemi|mi\b/.test(ccLow);
+  const isAltered = /altered|aloc|ams|conscious/.test(ccLow);
+  const isStroke = /stroke|cva/.test(ccLow);
+  const showAlteredBox = isAltered || isCardiacChest || isStroke;
+  // Treatment rows
+  const treatRows = (d.treats && d.treats.length)
+    ? d.treats.map(t => '<tr><td style="border:1px solid #1a1a2e; padding:3px 6px; height:18px;">\u2014</td>' +
+                          '<td style="border:1px solid #1a1a2e; padding:3px 6px;">' + t.label + '</td>' +
+                          '<td style="border:1px solid #1a1a2e; padding:3px 6px; height:18px;">\u2014</td></tr>').join('')
+    : '<tr><td style="border:1px solid #1a1a2e; padding:3px 6px; height:18px;">&nbsp;</td>' +
+        '<td style="border:1px solid #1a1a2e; padding:3px 6px;">&nbsp;</td>' +
+        '<td style="border:1px solid #1a1a2e; padding:3px 6px;">&nbsp;</td></tr>';
+  // Pad treatment table with empty rows
+  let treatTable = treatRows;
+  const filledRows = (d.treats && d.treats.length) || 1;
+  for (let i = filledRows; i < 3; i++) {
+    treatTable += '<tr><td style="border:1px solid #1a1a2e; padding:3px 6px; height:18px;">&nbsp;</td>' +
+                  '<td style="border:1px solid #1a1a2e; padding:3px 6px;">&nbsp;</td>' +
+                  '<td style="border:1px solid #1a1a2e; padding:3px 6px;">&nbsp;</td></tr>';
+  }
+  // Vital row builder
+  const vitRow = (time, hr, bp, rr, pupils, glu, sao2, mental) =>
     '<tr>' +
-      '<td style="border:1px solid #a0c8d8; padding:2px 6px;">now</td>' +
-      '<td style="border:1px solid #a0c8d8; padding:2px 6px;">' + (vitParts[0] || '\u2014') + '</td>' +
-      '<td style="border:1px solid #a0c8d8; padding:2px 6px;">' + (vitParts[1] || '\u2014') + '</td>' +
-      '<td style="border:1px solid #a0c8d8; padding:2px 6px;">' + (vitParts[2] || '\u2014') + '</td>' +
-      '<td style="border:1px solid #a0c8d8; padding:2px 6px;">\u2014</td>' +
-      '<td style="border:1px solid #a0c8d8; padding:2px 6px;">\u2014</td>' +
-      '<td style="border:1px solid #a0c8d8; padding:2px 6px;">' + (vitParts[3] || '\u2014') + '</td>' +
-      '<td style="border:1px solid #a0c8d8; padding:2px 6px;">A V P U</td>' +
+      '<td style="border:1px solid #1a1a2e; padding:3px 6px;">' + (time || '&nbsp;') + '</td>' +
+      '<td style="border:1px solid #1a1a2e; padding:3px 6px;">' + (hr || '&nbsp;') + '</td>' +
+      '<td style="border:1px solid #1a1a2e; padding:3px 6px;">' + (bp || '&nbsp;') + '</td>' +
+      '<td style="border:1px solid #1a1a2e; padding:3px 6px;">' + (rr || '&nbsp;') + '</td>' +
+      '<td style="border:1px solid #1a1a2e; padding:3px 6px;">' + (pupils || '&nbsp;') + '</td>' +
+      '<td style="border:1px solid #1a1a2e; padding:3px 6px;">' + (glu || '&nbsp;') + '</td>' +
+      '<td style="border:1px solid #1a1a2e; padding:3px 6px;">' + (sao2 || '&nbsp;') + '</td>' +
+      '<td style="border:1px solid #1a1a2e; padding:3px 6px; font-size:9px;">' +
+        cb(mental === 'A') + 'A ' + cb(mental === 'V') + 'V ' +
+        cb(mental === 'P') + 'P ' + cb(mental === 'U') + 'U' +
+      '</td>' +
     '</tr>';
   return (
-    '<div style="background:#fff; color:#1a1a2e; padding:14px 18px; ' +
-      'font-family:Times,serif; font-size:11px; line-height:1.45; ' +
-      'border:2px solid #1a1a2e; border-radius:4px;">' +
-      '<div style="text-align:center; margin-bottom:10px; ' +
-        'border-bottom:2px solid #1a1a2e; padding-bottom:6px;">' +
-        '<div style="font-weight:bold; font-style:italic; font-size:13px; color:#3a4a90;">City of Pittsburgh Bureau of EMS</div>' +
-        '<div style="font-weight:bold; font-style:italic; font-size:13px; color:#3a4a90;">Transfer of Care Form</div>' +
+    '<div style="padding:14px 18px; font-family:Arial,Helvetica,sans-serif; ' +
+      'font-size:11px; line-height:1.4; color:#1a1a2e;">' +
+      // ----- Header: PA logo + title + Pittsburgh EMS shield -----
+      '<div style="display:grid; grid-template-columns:120px 1fr 100px; ' +
+        'gap:10px; align-items:center; margin-bottom:10px;">' +
+        // PA "logo" placeholder
+        '<div style="font-family:serif; font-size:9px; line-height:1.2;">' +
+          '<div style="display:flex; align-items:center; gap:4px;">' +
+            '<svg viewBox="0 0 30 30" width="24" height="24">' +
+              '<path d="M5 18 Q5 8 15 8 Q25 8 25 18 Z" fill="#5a7a90" stroke="#1a1a2e" stroke-width="1"/>' +
+              '<rect x="13" y="14" width="4" height="10" fill="#5a7a90"/>' +
+            '</svg>' +
+            '<div><div style="font-style:italic; font-weight:bold; color:#5a7a90;">pennsylvania</div>' +
+            '<div style="font-style:italic; color:#7a90a8; font-size:8px;">DEPARTMENT OF HEALTH</div></div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="text-align:left; font-style:italic; font-weight:bold; ' +
+          'font-size:18px; color:#5a7a90; line-height:1.2;">' +
+          'City of Pittsburgh Bureau of EMS<br>Transfer of Care Form</div>' +
+        // Pittsburgh EMS shield placeholder
+        '<div style="text-align:right;">' +
+          '<svg viewBox="0 0 60 60" width="60" height="60">' +
+            '<path d="M30 5 L52 12 L52 32 Q52 48 30 56 Q8 48 8 32 L8 12 Z" ' +
+              'fill="#1a3870" stroke="#ffd166" stroke-width="2"/>' +
+            '<text x="30" y="22" text-anchor="middle" fill="#ffd166" ' +
+              'font-size="6" font-weight="bold" font-family="Arial">PITTSBURGH</text>' +
+            '<text x="30" y="36" text-anchor="middle" fill="#fff" ' +
+              'font-size="5" font-family="Arial">EMERGENCY</text>' +
+            '<text x="30" y="44" text-anchor="middle" fill="#fff" ' +
+              'font-size="5" font-family="Arial">MEDICAL</text>' +
+            '<text x="30" y="52" text-anchor="middle" fill="#fff" ' +
+              'font-size="5" font-family="Arial">SERVICES</text>' +
+          '</svg>' +
+        '</div>' +
       '</div>' +
-      '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; ' +
-        'border:1px solid #a0c8d8; padding:6px; margin-bottom:6px;">' +
-        '<div><b>Patient Name:</b> ____________________</div>' +
-        '<div><b>Chief Complaint:</b> ' + d.cc + '</div>' +
-        '<div><b>Phone #:</b> __________</div>' +
-        '<div><b>Date of Birth:</b> __________ &nbsp; <b>Age:</b> __</div>' +
-        '<div><b>Incident Address:</b> __________________</div>' +
-        '<div><b>Patient\u2019s Address:</b> __________________</div>' +
+      // ----- Top patient identifier block + sidebar fields -----
+      '<div style="display:grid; grid-template-columns:1fr 1fr 1fr 200px; gap:6px; ' +
+        'border:1px solid #1a1a2e; padding:6px;">' +
+        '<div style="grid-column:1 / span 3;"><b>Patient Name:</b> ' + blank(null, 240) + '</div>' +
+        '<div style="grid-column:4; border-left:1px solid #1a1a2e; padding-left:8px;">' +
+          '<div><span style="font-size:9px;">Date</span> ' + blank(null, 60) + '</div>' +
+          '<div><span style="font-size:9px;">Time</span> ' + blank(null, 60) + '</div>' +
+          '<div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">' +
+            '<div><b style="font-size:10px;">City of Pittsburgh \u2014 Dept. of Public Safety</b></div>' +
+            '<div></div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="grid-column:1 / span 1;"><b>Chief Complaint:</b> ' + blank(d.cc, 140) + '</div>' +
+        '<div><b>Phone #:</b> ' + blank(null, 100) + '</div>' +
+        '<div><b>Date of Birth:</b> ' + blank(null, 80) + '</div>' +
+        '<div><b>Age:</b> ' + blank(null, 40) + ' &nbsp; ' + cb(false) + ' Male &nbsp; ' + cb(false) + ' Female</div>' +
+        '<div style="grid-column:1 / span 2;"><b>Incident Address:</b> ' + blank(null, 240) + '</div>' +
+        '<div style="grid-column:3 / span 2;"><b>Patient\u2019s Address:</b> ' + blank(null, 280) + '</div>' +
       '</div>' +
-      '<div style="background:#a0c8d8; color:#1a1a2e; text-align:center; ' +
-        'padding:3px; font-weight:bold; font-size:11px;">History/Exam</div>' +
-      '<div style="border:1px solid #a0c8d8; padding:6px;">' +
-        '<div><b>Symptoms/History:</b> ' + (d.events || '\u2014') + '</div>' +
-        '<div style="margin-top:4px;"><b>Onset:</b> ' + d.onset + ' \u2014 <b>Quality:</b> ' + d.quality +
-          ' \u2014 <b>Region:</b> ' + d.region + ' \u2014 <b>Severity:</b> ' + d.severity + '</div>' +
-        '<div style="margin-top:4px;"><b>Past Medical History:</b> ' + d.pmhx + '</div>' +
-        '<div style="margin-top:4px;"><b>Allergies:</b> ' + d.allergy + ' &nbsp; ' +
-          cb(/nkda|none|no known/i.test(d.allergy || '')) + ' No Known</div>' +
-        '<div style="margin-top:4px;"><b>Medications:</b> ' + d.meds + '</div>' +
-        '<div style="margin-top:4px;"><b>Last Oral Intake:</b> ' + d.lastOral + '</div>' +
+      // ----- "History/Exam" + "For Altered Mental Status..." headers -----
+      '<div style="display:grid; grid-template-columns:1fr 1fr; gap:0; margin-top:6px;">' +
+        '<div style="background:#a0c0d8; text-align:center; padding:3px; ' +
+          'font-weight:bold; font-size:11px; border:1px solid #1a1a2e;">History/Exam</div>' +
+        '<div style="background:#a0c0d8; text-align:center; padding:3px; ' +
+          'font-weight:bold; font-size:11px; border:1px solid #1a1a2e; border-left:0;">' +
+          'For Altered Mental Status, Chest pain, or Stroke</div>' +
       '</div>' +
-      '<div style="background:#a0c8d8; color:#1a1a2e; text-align:center; ' +
-        'padding:3px; font-weight:bold; font-size:11px; margin-top:6px;">Vital Signs</div>' +
+      // ----- History + Onset/Last Seen Normal -----
+      '<div style="display:grid; grid-template-columns:1fr 1fr; gap:0; ' +
+        'border:1px solid #1a1a2e; border-top:0;">' +
+        '<div style="padding:6px; border-right:1px solid #1a1a2e;">' +
+          '<div><b>Symptoms/History:</b></div>' +
+          '<div style="font-size:10px; min-height:60px; padding:2px 0;">' + (d.events !== '\u2014 not asked \u2014' ? d.events : '') + '</div>' +
+        '</div>' +
+        '<div style="padding:0;">' +
+          '<div style="background:#dceaf3; padding:2px 6px; font-size:10px;">' +
+            'Onset of Symptoms / Last Seen Normal</div>' +
+          '<div style="display:grid; grid-template-columns:1fr 1fr; ' +
+            'border-top:1px solid #1a1a2e;">' +
+            '<div style="padding:4px 6px; border-right:1px solid #1a1a2e;">' +
+              '<div style="font-size:9px;">Date</div>' +
+              '<div style="height:50px;"></div>' +
+            '</div>' +
+            '<div style="padding:4px 6px;">' +
+              '<div style="font-size:9px;">Time</div>' +
+              '<div style="height:50px;">' + (showAlteredBox && d.onset !== '\u2014' ? d.onset : '') + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      // ----- Past Medical History checkboxes -----
+      '<div style="border:1px solid #1a1a2e; border-top:0; padding:5px 8px;">' +
+        '<b>Past Medical History</b><br>' +
+        cb(hasDM) + ' Diabetes &nbsp; ' +
+        cb(hasHTN) + ' HTN &nbsp; ' +
+        cb(hasHeart) + ' Heart Problems &nbsp; ' +
+        cb(hasCancer) + ' Cancer &nbsp; ' +
+        cb(hasSeiz) + ' Seizures &nbsp; ' +
+        cb(hasAsthma) + ' Asthma/COPD &nbsp; ' +
+        cb(hasStroke) + ' TIA/Stroke &nbsp; ' +
+        cb(hasOther) + ' Other: ' + blank(hasOther ? d.pmhx : null, 100) +
+      '</div>' +
+      // ----- Allergies + Medications -----
+      '<div style="display:grid; grid-template-columns:1fr 1fr; gap:0;">' +
+        '<div style="border:1px solid #1a1a2e; border-top:0; border-right:0;">' +
+          '<div style="background:#dceaf3; text-align:center; padding:2px; ' +
+            'font-weight:bold; font-size:10px;">Allergies: &nbsp;&nbsp; ' +
+            cb(/nkda|none|no known/i.test(d.allergy || '')) + ' No Known</div>' +
+          '<div style="padding:4px 6px; min-height:50px; font-size:10px;">' +
+            (d.allergy && !/no known|nkda/i.test(d.allergy) ? d.allergy : '') + '</div>' +
+        '</div>' +
+        '<div style="border:1px solid #1a1a2e; border-top:0;">' +
+          '<div style="background:#dceaf3; text-align:center; padding:2px; ' +
+            'font-weight:bold; font-size:10px;">Medications:</div>' +
+          '<div style="padding:4px 6px; min-height:50px; font-size:10px;">' +
+            (d.meds !== '\u2014 not asked \u2014' ? d.meds : '') + '</div>' +
+        '</div>' +
+      '</div>' +
+      // ----- Physical Exam -----
+      '<div style="display:grid; grid-template-columns:1fr 1fr; gap:0;">' +
+        '<div style="border:1px solid #1a1a2e; border-top:0; border-right:0; padding:6px 8px;">' +
+          '<div style="text-align:center; font-weight:bold; font-size:11px;">Physical Exam:</div>' +
+          '<div style="font-size:10px; line-height:1.6;">' +
+            'Heart: ' + cb(true) + ' NL ' + blank(null, 60) + ' &nbsp; ' +
+            'Lungs: ' + cb(true) + ' NL ' + blank(null, 60) + '<br>' +
+            'Abd: ' + cb(true) + ' NL ' + blank(null, 60) + ' &nbsp; ' +
+            'Ext: ' + cb(true) + ' NL ' + blank(null, 60) + '<br>' +
+            'Neuro: ' + cb(true) + ' NL ' + blank(null, 60) + ' &nbsp; ' +
+            'Other: ' + blank(null, 80) + '<br>' +
+            'Other: ' + blank(null, 80) + ' &nbsp; ' +
+            'Other: ' + blank(null, 80) +
+          '</div>' +
+        '</div>' +
+        '<div style="border:1px solid #1a1a2e; border-top:0; padding:6px 8px;">' +
+          '<div style="font-size:10px; min-height:90px;">' +
+            'Patient\u2019s Medications or Medication list delivered with report &nbsp;&nbsp; ' +
+            cb(false) + ' Yes &nbsp; ' + cb(false) + ' No' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      // ----- VITAL SIGNS table -----
+      '<div style="background:#a0c0d8; text-align:center; padding:3px; ' +
+        'font-weight:bold; font-size:11px; border:1px solid #1a1a2e; border-top:0;">VITAL SIGNS</div>' +
       '<table style="width:100%; border-collapse:collapse; font-size:10px;">' +
-        '<thead><tr style="background:#e0e8f0;">' +
-          '<th style="border:1px solid #a0c8d8; padding:3px;">Time</th>' +
-          '<th style="border:1px solid #a0c8d8; padding:3px;">Pulse</th>' +
-          '<th style="border:1px solid #a0c8d8; padding:3px;">BP</th>' +
-          '<th style="border:1px solid #a0c8d8; padding:3px;">Resp</th>' +
-          '<th style="border:1px solid #a0c8d8; padding:3px;">Pupils</th>' +
-          '<th style="border:1px solid #a0c8d8; padding:3px;">Glucose</th>' +
-          '<th style="border:1px solid #a0c8d8; padding:3px;">SaO2</th>' +
-          '<th style="border:1px solid #a0c8d8; padding:3px;">Mental Status (AVPU)</th>' +
-        '</tr></thead><tbody>' + vitalRow + '</tbody>' +
+        '<thead><tr style="background:#dceaf3;">' +
+          '<th style="border:1px solid #1a1a2e; padding:3px;">Time</th>' +
+          '<th style="border:1px solid #1a1a2e; padding:3px;">Pulse</th>' +
+          '<th style="border:1px solid #1a1a2e; padding:3px;">Blood Pressure</th>' +
+          '<th style="border:1px solid #1a1a2e; padding:3px;">Resp</th>' +
+          '<th style="border:1px solid #1a1a2e; padding:3px;">Pupils</th>' +
+          '<th style="border:1px solid #1a1a2e; padding:3px;">Glucose</th>' +
+          '<th style="border:1px solid #1a1a2e; padding:3px;">SaO2</th>' +
+          '<th style="border:1px solid #1a1a2e; padding:3px;" colspan="1">MENTAL STATUS (AVPU)<br><span style="font-weight:normal; font-size:8px;">(Check Best Response)</span></th>' +
+        '</tr></thead><tbody>' +
+        vitRow('now', hrV ? hrV[1] : '', bpV ? bpV[1] : '', rrV ? rrV[1] : '',
+               '', '', spo2V ? spo2V[1] + '%' : '', 'A') +
+        vitRow('', '', '', '', '', '', '', '') +
+        vitRow('', '', '', '', '', '', '', '') +
+        '</tbody>' +
       '</table>' +
-      '<div style="background:#a0c8d8; color:#1a1a2e; text-align:center; ' +
-        'padding:3px; font-weight:bold; font-size:11px; margin-top:6px;">Suspected Injuries / Illnesses</div>' +
-      '<div style="border:1px solid #a0c8d8; padding:6px;">' +
-        d.signs + (d.region && d.region !== '\u2014' ? ' \u2014 ' + d.region : '') +
+      // ----- Suspected Injuries / Illnesses -----
+      '<div style="background:#a0c0d8; text-align:center; padding:3px; ' +
+        'font-weight:bold; font-size:11px; border:1px solid #1a1a2e; border-top:0;">' +
+        'Suspected Injuries / Illnesses</div>' +
+      '<div style="border:1px solid #1a1a2e; border-top:0; padding:6px 8px; ' +
+        'min-height:35px; font-size:10px;">' +
+        (d.signs !== '\u2014 not assessed \u2014' ? d.signs : '') +
+        (d.region && d.region !== '\u2014' ? ' \u2014 ' + d.region : '') +
       '</div>' +
-      '<div style="background:#a0c8d8; color:#1a1a2e; text-align:center; ' +
-        'padding:3px; font-weight:bold; font-size:11px; margin-top:6px;">EMS Treatment</div>' +
-      '<table style="width:100%; border-collapse:collapse; font-size:10px;">' +
-        '<thead><tr style="background:#e0e8f0;">' +
-          '<th style="border:1px solid #a0c8d8; padding:3px;">Time</th>' +
-          '<th style="border:1px solid #a0c8d8; padding:3px;">Medication/Treatment</th>' +
-          '<th style="border:1px solid #a0c8d8; padding:3px;">Dose</th>' +
-        '</tr></thead><tbody>' + treatRows + '</tbody>' +
-      '</table>' +
-      '<div style="margin-top:6px;"><b>Notes/Comments:</b> ' +
-        '(Include any changes in patient condition)</div>' +
-      '<div style="margin-top:8px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">' +
-        '<div><b>Provider Transferring Care:</b> _______________</div>' +
-        '<div><b>Time of Transfer:</b> _________</div>' +
-        '<div><b>EMS Name (Print):</b> _______________</div>' +
-        '<div><b>Receiving Facility:</b> ' + d.hosp + '</div>' +
+      // ----- EMS Treatment + Cardiac Arrest sidebar -----
+      '<div style="display:grid; grid-template-columns:1fr 280px; gap:0;">' +
+        '<div>' +
+          '<div style="background:#a0c0d8; text-align:center; padding:3px; ' +
+            'font-weight:bold; font-size:11px; border:1px solid #1a1a2e; border-top:0; border-right:0;">EMS Treatment</div>' +
+          '<table style="width:100%; border-collapse:collapse; font-size:10px;">' +
+            '<thead><tr style="background:#dceaf3;">' +
+              '<th style="border:1px solid #1a1a2e; padding:3px; width:50px;">Time</th>' +
+              '<th style="border:1px solid #1a1a2e; padding:3px;">Medication/Treatments</th>' +
+              '<th style="border:1px solid #1a1a2e; padding:3px; width:60px;">Dose</th>' +
+            '</tr></thead><tbody>' + treatTable + '</tbody>' +
+          '</table>' +
+          '<div style="border:1px solid #1a1a2e; border-top:0; padding:6px 8px; ' +
+            'min-height:30px; font-size:10px;">' +
+            '<b>Notes/Comments:</b> <i>(Include any changes in patient condition)</i>' +
+          '</div>' +
+        '</div>' +
+        '<div style="background:#dceaf3; border:1px solid #1a1a2e; border-top:0; padding:6px 8px;">' +
+          '<div style="font-weight:bold; text-align:center; font-size:11px; ' +
+            'border-bottom:1px solid #1a1a2e; padding-bottom:3px; margin-bottom:4px;">Cardiac Arrest</div>' +
+          '<div style="font-size:9px; line-height:1.4;">' +
+            '\u2022 Was the arrest witnessed? ' + cb(false) + ' Yes &nbsp; ' + cb(false) + ' No<br>' +
+            'Arrest witnessed by: ' + cb(false) + ' Family &nbsp; ' + cb(false) + ' Bystander &nbsp; ' + cb(false) + ' Fire &nbsp; ' + cb(false) + ' EMS<br>' +
+            '\u2022 Bystander CPR? ' + cb(false) + ' Yes &nbsp; ' + cb(false) + ' No<br>' +
+            '\u2022 Was the AED applied? ' + cb(false) + ' Yes &nbsp; ' + cb(false) + ' No<br>' +
+            '\u2022 Did the AED fire? ' + cb(false) + ' Yes &nbsp; ' + cb(false) + ' No &nbsp; # of times: __<br>' +
+            '\u2022 Did the cardiac arrest occur:<br>' +
+            '&nbsp;&nbsp;&nbsp; ' + cb(false) + ' Before or ' + cb(false) + ' After you arrived?<br>' +
+            '\u2022 Initial Rhythm: VFib &nbsp; Vtach &nbsp; Asystole &nbsp; PEA &nbsp; Other __<br>' +
+            '\u2022 Pulse return at any time? ' + cb(false) + ' Yes &nbsp; ' + cb(false) + ' No' +
+          '</div>' +
+          '<div style="border-top:1px solid #1a1a2e; margin-top:4px; padding-top:4px; ' +
+            'font-weight:bold; font-size:10px;">12 Lead ECG Delivered With Report &nbsp;&nbsp; Y &nbsp; N</div>' +
+        '</div>' +
+      '</div>' +
+      // ----- IV row -----
+      '<div style="border:1px solid #1a1a2e; border-top:0; ' +
+        'display:grid; grid-template-columns:60px 80px 200px 1fr 1fr; ' +
+        'gap:0; font-size:10px;">' +
+        '<div style="border-right:1px solid #1a1a2e; padding:4px 6px; ' +
+          'background:#a0c0d8; font-weight:bold;">IV</div>' +
+        '<div style="border-right:1px solid #1a1a2e; padding:4px 6px;">Y &nbsp; N</div>' +
+        '<div style="border-right:1px solid #1a1a2e; padding:4px 6px;"><b>Size/Location:</b> ' + blank(null, 100) + '</div>' +
+        '<div style="padding:4px 6px;"><b>Total IV Fluid Volume Given:</b> ' + blank(null, 60) + ' mL</div>' +
+        '<div></div>' +
+      '</div>' +
+      // ----- Provider transferring care + Receiving + signatures -----
+      '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0;">' +
+        '<div style="background:#a0c0d8; text-align:center; padding:3px; ' +
+          'font-weight:bold; font-size:11px; border:1px solid #1a1a2e; border-top:0; border-right:0;">' +
+          'Provider Transferring Care</div>' +
+        '<div style="background:#a0c0d8; text-align:center; padding:3px; ' +
+          'font-weight:bold; font-size:11px; border:1px solid #1a1a2e; border-top:0; border-right:0;">' +
+          'Certification Number</div>' +
+        '<div style="background:#a0c0d8; text-align:center; padding:3px; ' +
+          'font-weight:bold; font-size:11px; border:1px solid #1a1a2e; border-top:0;">' +
+          'Transfer Information</div>' +
+      '</div>' +
+      '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; ' +
+        'border:1px solid #1a1a2e; border-top:0;">' +
+        '<div style="padding:6px 8px; border-right:1px solid #1a1a2e;">' +
+          '<div><b>Fire Name (Print):</b> ' + blank(null, 120) + '</div>' +
+          '<div style="margin-top:6px;"><b>Fire Signature:</b></div>' +
+          '<div style="border-bottom:1px solid #1a1a2e; height:20px;"></div>' +
+          '<div style="margin-top:6px;"><b>EMS Name (Print):</b> ' + blank(null, 120) + '</div>' +
+          '<div style="margin-top:6px;"><b>EMS Provider Signature:</b></div>' +
+          '<div style="border-bottom:1px solid #1a1a2e; height:20px;"></div>' +
+        '</div>' +
+        '<div style="padding:6px 8px; border-right:1px solid #1a1a2e;">' +
+          '<div style="height:32px; border-bottom:1px solid #1a1a2e;"></div>' +
+        '</div>' +
+        '<div style="padding:6px 8px;">' +
+          '<div><b>Time of Transfer:</b> ' + blank(null, 80) + '</div>' +
+          '<div style="margin-top:6px;"><b>Receiving Facility (Hospital) Name:</b></div>' +
+          '<div style="font-weight:bold;">' + blank(d.hosp && d.hosp !== '\u2014 pending \u2014' ? d.hosp : null, 200) + '</div>' +
+          '<div style="margin-top:6px;"><b>Receiving Facility RN / PA-C / MD / DO:</b></div>' +
+          '<div style="border-bottom:1px solid #1a1a2e; height:20px;"></div>' +
+          '<div style="margin-top:6px;"><b>Signature:</b> ' + blank(null, 130) + ' <b>(Print):</b> ' + blank(null, 100) + '</div>' +
+        '</div>' +
+      '</div>' +
+      // ----- Footer -----
+      '<div style="margin-top:10px; display:flex; justify-content:space-between; ' +
+        'font-size:10px; font-weight:bold;">' +
+        '<div>Top Copy: Hospital &nbsp;&nbsp; Middle: EMS &nbsp;&nbsp; Bottom: Fire</div>' +
+        '<div>Ver. 10C - 2/15/11</div>' +
       '</div>' +
     '</div>'
   );
@@ -14421,19 +14844,22 @@ function _renderTransferOfCareForm(d) {
 function _renderRunSheet(d) {
   const treatRows = d.treats && d.treats.length
     ? d.treats.map(t => '<div style="margin-left:14px;">\u2022 ' + t.label + '</div>').join('')
-    : '<div style="margin-left:14px; color:#a0a0b0;">\u2014 no treatments recorded \u2014</div>';
+    : '<div style="margin-left:14px; color:#7a8090;">\u2014 no treatments recorded \u2014</div>';
   return (
-    '<div style="font-size:13px; line-height:1.7;">' +
-      '<div style="font-size:15px; color:#ffd166; margin-bottom:8px;">' +
-        '<b>Chief Complaint:</b> ' + d.cc + '</div>' +
-      '<div style="background:rgba(255,209,102,0.06); padding:10px 14px; ' +
-        'border-left:3px solid #ffd166; margin-bottom:10px;">' +
+    '<div style="padding:20px 28px; font-family:Arial,Helvetica,sans-serif; ' +
+      'font-size:13px; line-height:1.6; color:#1a1a2e;">' +
+      '<div style="font-size:16px; color:#5a7a90; margin-bottom:10px; ' +
+        'border-bottom:2px solid #5a7a90; padding-bottom:6px;">' +
+        '<b>RUN SHEET \u2014 ' + d.cc + '</b></div>' +
+      '<div style="background:#f4f4f0; padding:10px 14px; ' +
+        'border-left:3px solid #ffd166; margin-bottom:14px;">' +
         '<div><b>Current Vitals:</b> ' + d.vit + '</div>' +
         '<div style="margin-top:4px;"><b>Signs:</b> ' + d.signs + '</div>' +
       '</div>' +
-      '<div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">' +
+      '<div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">' +
         '<div>' +
-          '<div style="color:#06d6a0; font-weight:bold; margin-bottom:4px;">SAMPLE</div>' +
+          '<div style="background:#06d6a0; color:#1a1a2e; padding:4px 8px; ' +
+            'font-weight:bold; margin-bottom:6px; border-radius:2px;">SAMPLE</div>' +
           '<div><b>S</b>igns/symptoms: ' + d.signs + '</div>' +
           '<div><b>A</b>llergies: ' + d.allergy + '</div>' +
           '<div><b>M</b>edications: ' + d.meds + '</div>' +
@@ -14442,7 +14868,8 @@ function _renderRunSheet(d) {
           '<div><b>E</b>vents leading up: ' + d.events + '</div>' +
         '</div>' +
         '<div>' +
-          '<div style="color:#3a90c8; font-weight:bold; margin-bottom:4px;">OPQRST</div>' +
+          '<div style="background:#3a90c8; color:#fff; padding:4px 8px; ' +
+            'font-weight:bold; margin-bottom:6px; border-radius:2px;">OPQRST</div>' +
           '<div><b>O</b>nset: ' + d.onset + '</div>' +
           '<div><b>P</b>rovocation: ' + d.provoc + '</div>' +
           '<div><b>Q</b>uality: ' + d.quality + '</div>' +
@@ -14451,11 +14878,12 @@ function _renderRunSheet(d) {
           '<div><b>T</b>ime: ' + d.onset + '</div>' +
         '</div>' +
       '</div>' +
-      '<div style="margin-top:14px;">' +
-        '<div style="color:#ef476f; font-weight:bold; margin-bottom:4px;">Treatments</div>' +
+      '<div style="margin-top:18px;">' +
+        '<div style="background:#ef476f; color:#fff; padding:4px 8px; ' +
+          'font-weight:bold; margin-bottom:6px; border-radius:2px;">Treatments</div>' +
         treatRows +
       '</div>' +
-      '<div style="margin-top:10px;"><b>Receiving:</b> ' + d.hosp + '</div>' +
+      '<div style="margin-top:14px;"><b>Receiving:</b> ' + d.hosp + '</div>' +
     '</div>'
   );
 }
@@ -18129,18 +18557,21 @@ async function pkmAskDrugDose(label, tags) {
 //   RL: right hip / thigh                → (130, 360)
 //   LL: left hip / thigh                 → (230, 360)
 const EKG_LEADS = [
-  { id: 'V1', x: 170, y: 200, color: '#c8201a', desc: '4th ICS, right sternal border' },
-  { id: 'V2', x: 190, y: 200, color: '#ffd166', desc: '4th ICS, left sternal border' },
+  // Stage 2.9.5l: chest-focused mannequin per author note. Limb leads
+  // go on shoulders (RA/LA) and hips (RL/LL) \u2014 no full arms or legs.
+  // V leads sit on the precordium (4th/5th ICS).
+  { id: 'V1', x: 165, y: 200, color: '#c8201a', desc: '4th ICS, right sternal border' },
+  { id: 'V2', x: 195, y: 200, color: '#ffd166', desc: '4th ICS, left sternal border' },
   { id: 'V3', x: 210, y: 220, color: '#06d6a0', desc: 'Midway between V2 and V4' },
-  { id: 'V4', x: 230, y: 240, color: '#3b82f6', desc: '5th ICS, left mid-clavicular line' },
-  { id: 'V5', x: 255, y: 235, color: '#a8743a', desc: 'Same horizontal as V4, anterior axillary' },
-  { id: 'V6', x: 280, y: 230, color: '#a020a0', desc: 'Same horizontal as V4, mid-axillary' },
-  { id: 'RA', x: 90,  y: 130, color: '#ffffff', desc: 'Right shoulder / right arm' },
-  { id: 'LA', x: 270, y: 130, color: '#000000', desc: 'Left shoulder / left arm' },
-  { id: 'RL', x: 130, y: 360, color: '#22c55e', desc: 'Right hip / right leg' },
-  { id: 'LL', x: 230, y: 360, color: '#c8201a', desc: 'Left hip / left leg' },
+  { id: 'V4', x: 225, y: 245, color: '#3b82f6', desc: '5th ICS, left mid-clavicular line' },
+  { id: 'V5', x: 250, y: 240, color: '#a8743a', desc: 'Same horizontal as V4, anterior axillary line' },
+  { id: 'V6', x: 275, y: 235, color: '#a020a0', desc: 'Same horizontal as V4, mid-axillary line' },
+  { id: 'RA', x: 80,  y: 110, color: '#ffffff', desc: 'Right shoulder' },
+  { id: 'LA', x: 280, y: 110, color: '#000000', desc: 'Left shoulder' },
+  { id: 'RL', x: 110, y: 360, color: '#22c55e', desc: 'Right hip' },
+  { id: 'LL', x: 250, y: 360, color: '#c8201a', desc: 'Left hip' },
 ];
-const EKG_TOLERANCE = 28;   // pixels in viewBox space — lenient for first-time players
+const EKG_TOLERANCE = 28;   // pixels in viewBox space \u2014 lenient for first-time players
 async function pkmAskEkgPlacement(tags) {
   return new Promise((resolve) => {
     // Stage 2.9.5i: render EKG placement in a FULLSCREEN MODAL instead
@@ -18342,55 +18773,112 @@ function _ekgMinigameMarkup() {
         L.id + '</div>';
   });
   trayHtml += '</div>';
-  // SVG anatomy. A torso silhouette with anatomical landmark guide lines.
-  // Drawn intentionally simple — color-coded reference dots show where each
-  // lead SHOULD go (faint dots, not labels) so an alert player can correlate
-  // the tray lead to the body. Labels stay off so it's not a giveaway.
+  // Stage 2.9.5l: redesigned mannequin per author note.
+  //   - Chest-focused (no full arms / legs) but with shoulder bumps
+  //     and hip bumps so the 4-lead limb leads have clear targets.
+  //   - OUTLINE TARGET CIRCLES drawn at each lead's correct position
+  //     in the lead\u2019s color, so the player can see where each lead
+  //     should be dropped.
+  //   - Anatomical labels (RSB, LSB, MCL, AAL, MAL, 4th/5th ICS) clearly
+  //     visible. Nipples drawn as a reference (V leads sit BELOW the
+  //     nipple line in the 4th/5th intercostal spaces).
+  // Build the target outline circles from EKG_LEADS so they always
+  // match the scoring positions.
+  let targetCircles = '';
+  EKG_LEADS.forEach(L => {
+    targetCircles +=
+      '<circle cx="' + L.x + '" cy="' + L.y + '" r="11" ' +
+        'fill="none" stroke="' + L.color + '" stroke-width="2" ' +
+        'stroke-dasharray="3,3" opacity="0.65"/>' +
+      '<circle cx="' + L.x + '" cy="' + L.y + '" r="2" ' +
+        'fill="' + L.color + '" opacity="0.7"/>';
+  });
   const svg =
     '<svg id="ekg-svg" viewBox="0 0 360 420" xmlns="http://www.w3.org/2000/svg"' +
-      ' style="width:100%; height:auto; max-height:55vh; cursor:crosshair;' +
+      ' style="width:100%; height:auto; max-height:70vh; cursor:crosshair;' +
       ' background:linear-gradient(180deg, #2a2a3e 0%, #1a1a2e 100%);' +
       ' border-radius:4px;">' +
-      // Skin-tone torso silhouette.
-      '<path d="M 90 100 Q 90 70 130 70 L 230 70 Q 270 70 270 100 ' +
-        ' L 280 200 L 290 280 L 290 380 L 220 390 L 180 385 L 140 390 L 70 380' +
-        ' L 70 280 L 80 200 Z"' +
-        ' fill="#d8a888" stroke="#8a6a4e" stroke-width="2"/>' +
-      // Neck / collar suggestion.
-      '<path d="M 145 70 Q 145 50 180 50 Q 215 50 215 70" fill="none"' +
-        ' stroke="#8a6a4e" stroke-width="1.5"/>' +
-      // Clavicles.
-      '<path d="M 100 105 Q 130 95 155 110" fill="none" stroke="#8a6a4e"' +
-        ' stroke-width="1.5" opacity="0.6"/>' +
-      '<path d="M 205 110 Q 230 95 260 105" fill="none" stroke="#8a6a4e"' +
-        ' stroke-width="1.5" opacity="0.6"/>' +
-      // Sternum (vertical center line).
-      '<line x1="180" y1="115" x2="180" y2="240" stroke="#8a6a4e"' +
-        ' stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>' +
-      // Mid-clavicular line (left side, where V4 lands).
-      '<line x1="230" y1="110" x2="230" y2="280" stroke="#8a6a4e"' +
-        ' stroke-width="0.7" stroke-dasharray="2,4" opacity="0.4"/>' +
-      // Anterior axillary line (left side, where V5 lands).
-      '<line x1="255" y1="120" x2="265" y2="280" stroke="#8a6a4e"' +
-        ' stroke-width="0.7" stroke-dasharray="2,4" opacity="0.35"/>' +
-      // Mid-axillary line (left side, where V6 lands).
-      '<line x1="280" y1="130" x2="285" y2="280" stroke="#8a6a4e"' +
-        ' stroke-width="0.7" stroke-dasharray="2,4" opacity="0.3"/>' +
-      // Rib outlines (4th ICS, 5th ICS) — faint reference.
-      '<path d="M 110 195 Q 180 215 250 195" fill="none" stroke="#8a6a4e"' +
-        ' stroke-width="0.8" opacity="0.35"/>' +
-      '<path d="M 105 240 Q 180 262 255 240" fill="none" stroke="#8a6a4e"' +
-        ' stroke-width="0.8" opacity="0.35"/>' +
-      // Arms (suggested).
-      '<path d="M 90 105 Q 60 130 60 180" fill="none" stroke="#8a6a4e"' +
-        ' stroke-width="1.5"/>' +
-      '<path d="M 270 105 Q 300 130 300 180" fill="none" stroke="#8a6a4e"' +
-        ' stroke-width="1.5"/>' +
-      // Hip/leg suggestion.
-      '<line x1="130" y1="380" x2="125" y2="410" stroke="#8a6a4e"' +
-        ' stroke-width="1.5"/>' +
-      '<line x1="230" y1="380" x2="235" y2="410" stroke="#8a6a4e"' +
-        ' stroke-width="1.5"/>' +
+      // ----- Body silhouette: head + neck + chest with shoulder/hip
+      //       flares (no arms or legs). -----
+      // Head (small ellipse at the top)
+      '<ellipse cx="180" cy="40" rx="28" ry="30" ' +
+        'fill="#d8a888" stroke="#8a6a4e" stroke-width="2"/>' +
+      // Neck
+      '<rect x="166" y="65" width="28" height="14" ' +
+        'fill="#d8a888" stroke="#8a6a4e" stroke-width="1.5"/>' +
+      // Torso: shoulders flare wide, taper at waist, flare again at hips
+      '<path d="M 75 100 Q 75 92 90 92 ' +
+        'L 270 92 Q 285 92 285 100 ' +
+        'L 290 200 L 290 280 ' +
+        'L 300 360 ' +
+        'L 285 380 L 220 386 L 180 384 L 140 386 L 75 380 ' +
+        'L 60 360 ' +
+        'L 70 280 L 70 200 Z" ' +
+        'fill="#d8a888" stroke="#8a6a4e" stroke-width="2"/>' +
+      // ----- Anatomical landmarks ----- 
+      // Clavicles (curving from shoulder toward sternum)
+      '<path d="M 90 105 Q 130 95 175 110" fill="none" ' +
+        'stroke="#8a6a4e" stroke-width="1.5" opacity="0.7"/>' +
+      '<path d="M 185 110 Q 230 95 270 105" fill="none" ' +
+        'stroke="#8a6a4e" stroke-width="1.5" opacity="0.7"/>' +
+      // Sternum (vertical center line, dashed)
+      '<line x1="180" y1="115" x2="180" y2="270" ' +
+        'stroke="#8a6a4e" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>' +
+      // Right sternal border (V1 column)
+      '<line x1="170" y1="115" x2="170" y2="240" ' +
+        'stroke="#7a90b0" stroke-width="0.7" stroke-dasharray="2,3" opacity="0.5"/>' +
+      // Left sternal border (V2 column)
+      '<line x1="190" y1="115" x2="190" y2="240" ' +
+        'stroke="#7a90b0" stroke-width="0.7" stroke-dasharray="2,3" opacity="0.5"/>' +
+      // Mid-clavicular line (V4 column)
+      '<line x1="225" y1="105" x2="225" y2="290" ' +
+        'stroke="#3a90c8" stroke-width="0.7" stroke-dasharray="2,4" opacity="0.55"/>' +
+      // Anterior axillary line (V5 column)
+      '<line x1="250" y1="115" x2="252" y2="290" ' +
+        'stroke="#3a90c8" stroke-width="0.7" stroke-dasharray="2,4" opacity="0.45"/>' +
+      // Mid-axillary line (V6 column)
+      '<line x1="275" y1="125" x2="278" y2="290" ' +
+        'stroke="#3a90c8" stroke-width="0.7" stroke-dasharray="2,4" opacity="0.40"/>' +
+      // 4th ICS reference (where V1/V2 sit) \u2014 slight curve
+      '<path d="M 90 200 Q 180 218 285 200" fill="none" ' +
+        'stroke="#c89860" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.55"/>' +
+      // 5th ICS reference (where V4/V5/V6 sit)
+      '<path d="M 90 245 Q 180 262 285 245" fill="none" ' +
+        'stroke="#c89860" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.55"/>' +
+      // ----- Nipples (anatomical reference \u2014 V leads sit BELOW
+      //       the nipple line at 4th/5th ICS, MCL) -----
+      '<circle cx="148" cy="180" r="3.5" fill="#a8623a" opacity="0.85"/>' +
+      '<circle cx="148" cy="180" r="1.6" fill="#7a3818"/>' +
+      '<circle cx="212" cy="180" r="3.5" fill="#a8623a" opacity="0.85"/>' +
+      '<circle cx="212" cy="180" r="1.6" fill="#7a3818"/>' +
+      // ----- TARGET OUTLINE CIRCLES (where leads should be placed) ----- 
+      targetCircles +
+      // ----- Landmark LABELS (small, color-coded so player can match
+      //       to tray leads) -----
+      '<g font-family="Courier New, monospace" font-size="9" font-weight="bold">' +
+        // Shoulder labels with arrows pointing IN toward the placement
+        // targets, so players know what region the limb leads go on.
+        '<text x="38" y="92" fill="#cfd5dc">R shoulder</text>' +
+        '<line x1="62" y1="105" x2="73" y2="110" stroke="#cfd5dc" stroke-width="0.8"/>' +
+        '<text x="298" y="92" fill="#cfd5dc">L shoulder</text>' +
+        '<line x1="296" y1="105" x2="287" y2="110" stroke="#cfd5dc" stroke-width="0.8"/>' +
+        // Hip labels
+        '<text x="40" y="394" fill="#cfd5dc">R hip</text>' +
+        '<line x1="62" y1="380" x2="100" y2="362" stroke="#cfd5dc" stroke-width="0.8"/>' +
+        '<text x="290" y="394" fill="#cfd5dc">L hip</text>' +
+        '<line x1="296" y1="378" x2="262" y2="362" stroke="#cfd5dc" stroke-width="0.8"/>' +
+        // Column labels along the top of the chest area
+        '<text x="170" y="124" text-anchor="middle" fill="#bccfe4" font-size="8">RSB</text>' +
+        '<text x="190" y="124" text-anchor="middle" fill="#bccfe4" font-size="8">LSB</text>' +
+        '<text x="225" y="100" text-anchor="middle" fill="#7ec8f0" font-size="8">MCL</text>' +
+        '<text x="252" y="112" text-anchor="middle" fill="#7ec8f0" font-size="8">AAL</text>' +
+        '<text x="278" y="122" text-anchor="middle" fill="#7ec8f0" font-size="8">MAL</text>' +
+        // ICS row labels (right side)
+        '<text x="305" y="206" fill="#e0b070" font-size="8">4th ICS</text>' +
+        '<text x="305" y="252" fill="#e0b070" font-size="8">5th ICS</text>' +
+        // Sternum label
+        '<text x="180" y="158" text-anchor="middle" fill="#a8a8b0" font-size="7">sternum</text>' +
+      '</g>' +
       // Empty group for placed-lead dots (filled by refreshUI).
       '<g id="ekg-placed-dots"></g>' +
     '</svg>';
@@ -23099,7 +23587,11 @@ function drawSidewalkArcade(ctx, t) {
   ctx.fillText('ARCADE', 0, -13.5);
   ctx.restore();
 }
-const SPECIAL_BUILDINGS = (function () {
+// Stage 2.9.5j: SPECIAL_BUILDINGS is mutable so we can filter the CMU
+// EMS station per-role. CEMS always sees their own station (it's their
+// home base). EMT/AEMT only see it ~1/1000 shifts \u2014 it's an
+// off-duty civilian sighting rather than a workplace.
+let SPECIAL_BUILDINGS = (function () {
   const out = [];
   let i = 0;
   for (let cz = -2; cz <= 2; cz++) {
@@ -23109,7 +23601,7 @@ const SPECIAL_BUILDINGS = (function () {
       const label = (kind === 'medbay') ? 'MEDICAL BAY' : 'AMBULANCE REPAIR';
       const accent = (kind === 'medbay') ? '#06d6a0' : '#ffd166';
       // Distribute the building's block-position inside its chunk so
-      // adjacent chunks don't all show their facility on the same edge —
+      // adjacent chunks don't all show their facility on the same edge \u2014
       // breaks the visual monotony. blocksPerSide = 4, so 1..2 are safe
       // interior choices that keep the building away from chunk edges.
       const blockBx = 1 + (i % 2);
@@ -23122,17 +23614,57 @@ const SPECIAL_BUILDINGS = (function () {
   // the player-spawn chunk. cz=1 is the chunk just south of (0,0), and
   // we put it at block (1,0) so the station's south face is right on
   // the road that borders the spawn chunk \u2014 the player can see and
-  // walk to the station within seconds of going on duty. It's a single
-  // station (not duplicated like medbay/repair across the 5\u00d75 grid)
-  // so the CMU EMS easter egg is intentionally singular.
+  // walk to the station within seconds of going on duty.
+  // Stage 2.9.5j: tagged with `_role: 'CEMS'` so finalize() can drop
+  // it for EMT/AEMT unless a 1/1000 roll passes.
   out.push({
     kind: 'cmuems',
     cx: 0, cz: 1, blockBx: 1, blockBy: 0,
     label: 'CMU EMS',
     accent: '#7a1d1d',     // CMU red (Cardinal)
+    _role: 'CEMS',
   });
   return out;
 })();
+// Stage 2.9.5j: filter the CMU EMS station per-role. Called once on
+// shift start, AFTER the player has chosen their role but BEFORE the
+// first chunk is built. CEMS always sees the station. EMT/AEMT see it
+// 1 in 1000 shifts \u2014 a rare easter egg.
+function finalizeSpecialBuildingsForRole() {
+  // Re-derive the base list every time (mutable; could have been
+  // filtered on a previous shift start).
+  const base = (function () {
+    const out = [];
+    let i = 0;
+    for (let cz = -2; cz <= 2; cz++) {
+      for (let cx = -2; cx <= 2; cx++) {
+        if (cx === 0 && cz === 0) continue;
+        const kind = (i % 2 === 0) ? 'medbay' : 'repair';
+        const label = (kind === 'medbay') ? 'MEDICAL BAY' : 'AMBULANCE REPAIR';
+        const accent = (kind === 'medbay') ? '#06d6a0' : '#ffd166';
+        const blockBx = 1 + (i % 2);
+        const blockBy = 1 + ((i / 2 | 0) % 2);
+        out.push({ kind, cx, cz, blockBx, blockBy, label, accent });
+        i++;
+      }
+    }
+    return out;
+  })();
+  const role = (game && game.role) || 'EMT';
+  const includeCmuems =
+    (role === 'CEMS') ||
+    (Math.random() < 0.001);   // 1/1000 chance for EMT/AEMT
+  if (includeCmuems) {
+    base.push({
+      kind: 'cmuems',
+      cx: 0, cz: 1, blockBx: 1, blockBy: 0,
+      label: 'CMU EMS',
+      accent: '#7a1d1d',
+      _role: 'CEMS',
+    });
+  }
+  SPECIAL_BUILDINGS = base;
+}
 // Compute world coords of a special building's footprint center.
 // Mirrors buildChunk's per-block layout: blockBx/blockBy index a block
 // inside the chunk; center is offset by GRID/2 from the chunk origin.
@@ -23977,14 +24509,16 @@ const CMUEMS_ROOMS = {
         prompt: 'Press E: Leave Storage', label: 'EXIT' },
     ],
     solids: [
-      // Stage 2.9.5i: lockers in SW corner per author note. Equipment
+      // Stage 2.9.5j: lockers in SW corner per author note. Equipment
       // shelves (AEDs, first aid, BVMs) line the rest of the walls.
+      // South W-half shelf moved west so player spawn at (360, 380)
+      // doesn't land inside its eastern edge.
       { kind: 'rect', x: 70,  y: 220, w: 110, h: 150 },      // lockers (SW corner)
       { kind: 'rect', x: 70,  y: 80,  w: 50,  h: 130 },      // west shelves (above lockers)
       { kind: 'rect', x: 600, y: 80,  w: 50,  h: 290 },      // east shelves (full)
       { kind: 'rect', x: 130, y: 80,  w: 460, h: 36 },       // north EMS-equipment shelf
-      { kind: 'rect', x: 200, y: 360, w: 160, h: 36 },       // south shelf W half (AEDs)
-      { kind: 'rect', x: 380, y: 360, w: 220, h: 36 },       // south shelf E half (BVMs/first aid)
+      { kind: 'rect', x: 130, y: 360, w: 170, h: 36 },       // south shelf W half (was 200..360, now 130..300)
+      { kind: 'rect', x: 420, y: 360, w: 180, h: 36 },       // south shelf E half (was 380..600, now 420..600)
     ],
   },
 };
@@ -25977,51 +26511,51 @@ function _cmuemsDecorStorage(offX, offY) {
   ctx.textAlign = 'center';
   ctx.fillText('SUPPLIES', offX + 360, offY + 76);
   // ----- South shelves with more equipment -----
-  // West half: AED placards
+  // West half: AED + trauma + BVM + first aid (130..300)
   ctx.fillStyle = '#5a3320';
-  ctx.fillRect(offX + 200, offY + 360, 160, 36);
+  ctx.fillRect(offX + 130, offY + 360, 170, 36);
   ctx.strokeStyle = '#3d1810';
   ctx.lineWidth = 1;
-  ctx.strokeRect(offX + 200, offY + 360, 160, 36);
-  // AED kits and trauma supplies
+  ctx.strokeRect(offX + 130, offY + 360, 170, 36);
+  // Trauma
   ctx.fillStyle = '#c1272d';
-  ctx.fillRect(offX + 210, offY + 366, 36, 24);
+  ctx.fillRect(offX + 138, offY + 366, 36, 24);
   ctx.fillStyle = '#fff';
   ctx.font = 'bold 5px "Inter", monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('TRAUMA', offX + 228, offY + 380);
+  ctx.fillText('TRAUMA', offX + 156, offY + 380);
   // BVM
   ctx.fillStyle = '#3a90c8';
-  ctx.fillRect(offX + 256, offY + 366, 36, 24);
+  ctx.fillRect(offX + 184, offY + 366, 36, 24);
   ctx.fillStyle = '#fff';
-  ctx.fillText('BVM', offX + 274, offY + 380);
+  ctx.fillText('BVM', offX + 202, offY + 380);
   // First aid
   ctx.fillStyle = '#f4f1de';
-  ctx.fillRect(offX + 302, offY + 366, 50, 24);
+  ctx.fillRect(offX + 230, offY + 366, 60, 24);
   ctx.fillStyle = '#c1272d';
-  ctx.fillRect(offX + 320, offY + 372, 4, 12);
-  ctx.fillRect(offX + 314, offY + 376, 16, 4);
+  ctx.fillRect(offX + 256, offY + 372, 4, 12);
+  ctx.fillRect(offX + 250, offY + 376, 16, 4);
   ctx.strokeStyle = '#a8a08a';
-  ctx.strokeRect(offX + 302, offY + 366, 50, 24);
-  // East half: O2 cylinders + splints
+  ctx.strokeRect(offX + 230, offY + 366, 60, 24);
+  // East half: O2 cylinders + splints (420..600)
   ctx.fillStyle = '#5a3320';
-  ctx.fillRect(offX + 380, offY + 360, 220, 36);
+  ctx.fillRect(offX + 420, offY + 360, 180, 36);
   ctx.strokeStyle = '#3d1810';
-  ctx.strokeRect(offX + 380, offY + 360, 220, 36);
+  ctx.strokeRect(offX + 420, offY + 360, 180, 36);
   // O2 cylinders standing in rack
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 4; i++) {
     ctx.fillStyle = '#06d6a0';
-    ctx.fillRect(offX + 390 + i * 26, offY + 366, 18, 24);
+    ctx.fillRect(offX + 430 + i * 26, offY + 366, 18, 24);
     ctx.fillStyle = '#3a3a40';
-    ctx.fillRect(offX + 394 + i * 26, offY + 366, 10, 4);
+    ctx.fillRect(offX + 434 + i * 26, offY + 366, 10, 4);
   }
   // Splints (long yellow strips)
   ctx.fillStyle = '#ffd166';
-  ctx.fillRect(offX + 530, offY + 368, 60, 6);
-  ctx.fillRect(offX + 530, offY + 378, 60, 6);
+  ctx.fillRect(offX + 538, offY + 368, 56, 6);
+  ctx.fillRect(offX + 538, offY + 378, 56, 6);
   // Cervical collars
   ctx.fillStyle = '#a8a08a';
-  ctx.fillRect(offX + 530, offY + 388, 60, 4);
+  ctx.fillRect(offX + 538, offY + 388, 56, 4);
   ctx.textAlign = 'start';
 }
 // ----- INTERIOR MODALS -----------------------------------------------------
@@ -33578,8 +34112,14 @@ function loop(now) {
     updateClockDisplay();
     updateActionPrompt();   // Stage 1.5: refresh exit-vehicle prompt
     updatePatientNotes();   // Stage 2.0h: hide notes panel between calls
+    // Stage 2.9.5j: cache dispatch-loc text so we don't write innerHTML
+    // every frame when the second hasn't ticked over.
     if (!game.destination && game.cooldown > 0) {
-      document.getElementById('dispatch-loc').textContent = 'Next call in ' + Math.max(0, Math.ceil(game.cooldown)) + 's';
+      const txt = 'Next call in ' + Math.max(0, Math.ceil(game.cooldown)) + 's';
+      if (txt !== _lastDispatchLocText) {
+        document.getElementById('dispatch-loc').textContent = txt;
+        _lastDispatchLocText = txt;
+      }
     }
     // Live update timer display when an E0/E1 call is active
     if (game.destination && game.destination.kind === 'call' && game.callTimer !== null) {
@@ -33587,12 +34127,15 @@ function loop(now) {
       const mm = Math.floor(sec / 60);
       const ss = sec - mm * 60;
       const timeStr = mm + ':' + (ss < 10 ? '0' + ss : ss);
-      const locEl = document.getElementById('dispatch-loc');
       const dispatch = game.destination.dispatch;
       let color = '#a0a0b0';
       if (game.callTimer < 30) color = '#ef476f';
       else if (game.callTimer < 60) color = '#ffa030';
-      locEl.innerHTML = '<span style="color:' + color + ';font-weight:bold;">⏱ ' + timeStr + '</span> · ' + dispatch.loc;
+      const html = '<span style="color:' + color + ';font-weight:bold;">\u23f1 ' + timeStr + '</span> \u00b7 ' + dispatch.loc;
+      if (html !== _lastDispatchLocText) {
+        document.getElementById('dispatch-loc').innerHTML = html;
+        _lastDispatchLocText = html;
+      }
     }
   } else if (game.mode === 'onScene' && !paused) {
     // Stage 1.5: while the medic is on foot, the world keeps living. The
@@ -35261,6 +35804,10 @@ function startShift() {
   // satisfying browser autoplay policy). Ambient + music start as soon as
   // the game loop sees mode === 'driving'.
   ensureAudio();
+  // Stage 2.9.5j: roll CMU EMS station inclusion per-role. CEMS always
+  // sees their home base; EMT/AEMT see it 1/1000 shifts as a rare easter
+  // egg. Must run BEFORE chunks are first built this shift.
+  finalizeSpecialBuildingsForRole();
   document.getElementById('hud-role').textContent = roleDisplay(game.role);
   game.hp = game.maxHp;
   game.patientsSaved = 0;
@@ -35473,6 +36020,9 @@ function startShift() {
   }
 }
 // Update clock panel DOM. Called once per frame from the main loop while driving.
+// Stage 2.9.5j: cache last shown clock values so per-frame DOM writes
+// only fire when minute/remaining-minute actually tick over.
+let _clockCachedTime = null, _clockCachedRem = null, _clockCachedPct = null;
 function updateClockDisplay() {
   const totalShiftSec = game.shiftHours * 60;        // shift length in real seconds
   const remainingSec = Math.max(0, totalShiftSec - game.shiftElapsedReal);
@@ -35487,18 +36037,29 @@ function updateClockDisplay() {
   let hour12 = hour24 % 12; if (hour12 === 0) hour12 = 12;
   const ampm = hour24 < 12 ? 'AM' : 'PM';
   const mmStr = minute < 10 ? '0' + minute : minute;
-  const gtEl = document.getElementById('game-time');
-  if (gtEl) gtEl.textContent = hour12 + ':' + mmStr + ' ' + ampm;
-  const remEl = document.getElementById('shift-remaining');
-  if (remEl) {
-    remEl.textContent = remHours + 'h ' + remMinutes + 'm left';
-    if (remainingSec < 60) remEl.classList.add('urgent');
-    else remEl.classList.remove('urgent');
+  const timeStr = hour12 + ':' + mmStr + ' ' + ampm;
+  if (timeStr !== _clockCachedTime) {
+    const gtEl = document.getElementById('game-time');
+    if (gtEl) gtEl.textContent = timeStr;
+    _clockCachedTime = timeStr;
   }
-  const fillEl = document.getElementById('shift-progress-fill');
-  if (fillEl) {
-    const pct = Math.min(100, (game.shiftElapsedReal / totalShiftSec) * 100);
-    fillEl.style.width = pct + '%';
+  const remStr = remHours + 'h ' + remMinutes + 'm left';
+  if (remStr !== _clockCachedRem) {
+    const remEl = document.getElementById('shift-remaining');
+    if (remEl) {
+      remEl.textContent = remStr;
+      if (remainingSec < 60) remEl.classList.add('urgent');
+      else remEl.classList.remove('urgent');
+    }
+    _clockCachedRem = remStr;
+  }
+  // Progress bar updates more granularly (every ~1% rather than every ms).
+  const pctRaw = Math.min(100, (game.shiftElapsedReal / totalShiftSec) * 100);
+  const pctRounded = Math.round(pctRaw * 4) / 4;   // 0.25% steps
+  if (pctRounded !== _clockCachedPct) {
+    const fillEl = document.getElementById('shift-progress-fill');
+    if (fillEl) fillEl.style.width = pctRaw + '%';
+    _clockCachedPct = pctRounded;
   }
 }
 // Stage 2.0e: auto-headlights — flip the rig's headlights on at dusk and
