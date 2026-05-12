@@ -12053,6 +12053,11 @@ function renderHP() {
 }
 function gameOver() {
   game.mode = 'gameover';
+  // Stage 3 fix: belt-and-suspenders hide of any walkthrough bubble that
+  // might still be visible. Both the enc-walkthrough and the (legacy,
+  // disabled) game-walkthrough get force-hidden + flagged inactive so
+  // they can never bleed onto the game-over screen.
+  try { _hideAllWalkthroughs(); } catch (_eHW) {}
   // Stage 3 polish: GTA-style OUT OF SERVICE stamp. Fires the moment the
   // rig is destroyed or both crew members go down \u2014 same overlay
   // system as call-outcome stamps, but on a longer (~3.2s) beat with a
@@ -19365,8 +19370,65 @@ try {
   }
 } catch (_e) {}
 
+// Stage 3: shared "hide every walkthrough bubble" helper called at every
+// screen transition (shift-end, game-over, back-to-title) so neither the
+// legacy nor the active walkthrough can bleed onto the wrap-up screens.
+function _hideAllWalkthroughs() {
+  // Legacy game-walkthrough \u2014 the DOM element itself is removed at
+  // boot by _stage3NukeLegacyWalkthrough, but defensive hide + state
+  // reset in case anything reconstructed it.
+  try {
+    if (game && game.gameWalkthrough) {
+      game.gameWalkthrough.active = false;
+      game.gameWalkthrough.completed = true;
+      if (game.gameWalkthrough._autoTimer) {
+        clearTimeout(game.gameWalkthrough._autoTimer);
+        game.gameWalkthrough._autoTimer = null;
+      }
+    }
+    const gw = document.getElementById('game-walkthrough');
+    if (gw) gw.style.display = 'none';
+  } catch (_e1) {}
+  // New enc-walkthrough \u2014 same idea.
+  try {
+    if (game && game.walkthrough) {
+      game.walkthrough.active = false;
+      game.walkthrough.completed = true;
+    }
+    const ew = document.getElementById('enc-walkthrough');
+    if (ew) ew.style.display = 'none';
+  } catch (_e2) {}
+}
+
+// Stage 3 final nuke: REMOVE the legacy game-walkthrough DOM element
+// outright at page load. The element + helper functions exist for save-
+// shape stability, but no code path should ever render into it again.
+// _renderGameWalkthroughStep / walkthroughEvent / etc. all guard on
+// `if (!el) return;` so they silently no-op once the element is gone.
+// This is the strongest possible defense against the legacy bubble
+// re-appearing through any code path we haven't found yet \u2014
+// monkey-patch, save-resume, or otherwise.
+(function _stage3NukeLegacyWalkthrough() {
+  const kill = () => {
+    try {
+      const el = document.getElementById('game-walkthrough');
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    } catch (_e) {}
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', kill);
+  } else {
+    kill();
+  }
+  // Belt + suspenders: also kill it on the next animation frame in case
+  // anything tries to inject it back between now and then.
+  try { requestAnimationFrame(kill); } catch (_e) {}
+})();
+
 // Hook the walkthrough's first step into startShift via monkey-patch.
-// Once shift begins, initGameWalkthroughForShift starts the chain.
+// Stage 3 fix: kept as a no-op shim so any save-state that expects the
+// global startShift wrapper to exist still finds it; init function
+// itself is now a no-op (defined above) so this just runs the original.
 if (typeof startShift === 'function') {
   const _origStartShift = startShift;
   startShift = function () {
@@ -48447,6 +48509,9 @@ function _updateTitleResumeButton() {
 }
 function endShift() {
   game.mode = 'shiftend';
+  // Stage 3 fix: hide every walkthrough bubble immediately at shift end
+  // so neither one bleeds onto the SHIFT COMPLETE screen.
+  try { _hideAllWalkthroughs(); } catch (_eHW) {}
   stopSiren();
   document.getElementById('clock-panel').style.display = 'none';
   document.getElementById('menu-btn').style.display = 'none';
@@ -48636,6 +48701,9 @@ function retry() {
 }
 function returnToSelect() {
   stopSiren();
+  // Stage 3 fix: kill any visible walkthrough bubble before the title
+  // screen takes over.
+  try { _hideAllWalkthroughs(); } catch (_eHW) {}
   // Stage 2.8 QOL: refresh the title-screen resume button visibility on
   // every return so a save committed at quit shows up immediately.
   try { _updateTitleResumeButton(); } catch (e) {}
