@@ -544,6 +544,209 @@
   #debrief .ps-doc-section .ps-doc-value {
     color: #f4f1de;
   }
+  /* ============================================================
+     Stage 3 — GTA-style result stamps.
+     A brief full-screen flash + slammed-in headline that appears just
+     before the normal debrief card. Pure CSS animation; one overlay
+     div drives every outcome type via class swap. Auto-hides after
+     ~1.8s and respects prefers-reduced-motion (fade only).
+
+     Stage 3 polish: per user feedback, stamps now ride on a SOLID
+     black background (not a translucent tint over gameplay). Reads
+     much cleaner \u2014 the world stops, the headline lands, then
+     the debrief takes over.
+     ============================================================ */
+  .result-stamp-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 600;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    pointer-events: none;
+    background: #000;     /* solid black; per-variant flash overrides briefly */
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .result-stamp-overlay.active {
+    display: flex;
+    animation: resultScreenFlash 1.8s ease-out forwards;
+  }
+  /* outOfService is a longer beat (rig destroyed / both crew down) and
+     keeps the screen black for the whole sequence rather than fading
+     out at the end. It also runs a flatline SVG behind the title. */
+  .result-stamp-overlay.outOfService.active {
+    animation: resultScreenFlatlineHold 3.2s ease-out forwards;
+  }
+  .result-stamp-main {
+    font-family: 'Impact', 'Arial Black', 'Helvetica', sans-serif;
+    font-size: clamp(48px, 11vw, 132px);
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    line-height: 0.95;
+    text-shadow:
+      4px 4px 0 #1a1a2e,
+      -2px -2px 0 #1a1a2e,
+      2px -2px 0 #1a1a2e,
+      -2px 2px 0 #1a1a2e,
+      0 0 24px rgba(0, 0, 0, 0.65);
+    color: #ffffff;
+    position: relative;
+    z-index: 2;
+  }
+  .result-stamp-sub {
+    font-family: 'Impact', 'Arial Black', 'Helvetica', sans-serif;
+    font-size: clamp(18px, 3.4vw, 38px);
+    font-weight: 700;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    margin-top: 14px;
+    text-shadow: 3px 3px 0 #1a1a2e, 0 0 14px rgba(0, 0, 0, 0.7);
+    color: #f4f1de;
+    position: relative;
+    z-index: 2;
+  }
+  .result-stamp-overlay.active .result-stamp-main {
+    animation: resultStampSlam 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .result-stamp-overlay.active .result-stamp-sub {
+    animation: resultStampSubFade 1.8s ease-out forwards;
+  }
+  /* outOfService variant uses a slower in / longer hold for the title
+     since the underlying flatline runs ~2.2s. */
+  .result-stamp-overlay.outOfService.active .result-stamp-main {
+    animation: resultStampOosTitle 3.2s ease-out forwards;
+  }
+  .result-stamp-overlay.outOfService.active .result-stamp-sub {
+    animation: resultStampOosSub 3.2s ease-out forwards;
+  }
+  /* Per-outcome color palettes */
+  .result-stamp-overlay.saved .result-stamp-main { color: #06d6a0; }
+  .result-stamp-overlay.saved .result-stamp-sub  { color: #ffffff; }
+  .result-stamp-overlay.notSaved .result-stamp-main { color: #ef476f; }
+  .result-stamp-overlay.notSaved .result-stamp-sub  { color: #ffd166; }
+  .result-stamp-overlay.criticalFailure .result-stamp-main { color: #ff5722; }
+  .result-stamp-overlay.criticalFailure .result-stamp-sub  { color: #ffd166; }
+  .result-stamp-overlay.alsTransfer .result-stamp-main { color: #ffd166; }
+  .result-stamp-overlay.alsTransfer .result-stamp-sub  { color: #ffffff; }
+  .result-stamp-overlay.refusalComplete .result-stamp-main { color: #38bdf8; }
+  .result-stamp-overlay.refusalComplete .result-stamp-sub  { color: #ffffff; }
+  .result-stamp-overlay.treatRelease .result-stamp-main { color: #4ade80; }
+  .result-stamp-overlay.treatRelease .result-stamp-sub  { color: #ffffff; }
+  .result-stamp-overlay.transportComplete .result-stamp-main { color: #fbbf24; }
+  .result-stamp-overlay.transportComplete .result-stamp-sub  { color: #ffffff; }
+  .result-stamp-overlay.outOfService .result-stamp-main { color: #ef4444; }
+  .result-stamp-overlay.outOfService .result-stamp-sub  { color: #ef4444; opacity: 0.75; letter-spacing: 7px; }
+  /* Stage 3: SHIFT COMPLETE banner palette \u2014 green like a saved-call
+     stamp, but bigger letter-spacing on the sub line for the
+     "good work" wrap-up vibe. */
+  .result-stamp-overlay.shiftComplete .result-stamp-main { color: #06d6a0; }
+  .result-stamp-overlay.shiftComplete .result-stamp-sub  { color: #ffd166; letter-spacing: 8px; }
+
+  /* Flatline strip behind the OUT OF SERVICE headline. Stays hidden for
+     every other variant. The SVG inside <#result-stamp-flatline> animates
+     its dashoffset to draw a heartbeat that flat-lines. */
+  .result-stamp-flatline {
+    position: absolute;
+    left: 0; right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    height: clamp(60px, 14vh, 140px);
+    display: none;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .result-stamp-overlay.outOfService.active .result-stamp-flatline {
+    display: block;
+    animation: resultFlatlineFade 3.2s ease-out forwards;
+  }
+  .result-stamp-flatline svg { width: 100%; height: 100%; display: block; }
+  .result-stamp-flatline .ekg-trace {
+    fill: none;
+    stroke: #ef4444;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.65));
+    stroke-dasharray: 2000;
+    stroke-dashoffset: 2000;
+    animation: resultFlatlineDraw 2.6s ease-out 0.1s forwards;
+  }
+
+  @keyframes resultStampSlam {
+    0%   { opacity: 0; transform: scale(1.7) rotate(-1.5deg); filter: blur(3px); }
+    14%  { opacity: 1; transform: scale(1.00) rotate(0deg);   filter: blur(0); }
+    65%  { opacity: 1; transform: scale(1.03) rotate(0deg);   filter: blur(0); }
+    100% { opacity: 0; transform: scale(1.10) rotate(0deg);   filter: blur(0); }
+  }
+  @keyframes resultStampSubFade {
+    0%   { opacity: 0; transform: translateY(14px); }
+    25%  { opacity: 1; transform: translateY(0); }
+    70%  { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(0); }
+  }
+  /* OUT OF SERVICE — title arrives later (after the flatline draws),
+     holds longer, then fades. */
+  @keyframes resultStampOosTitle {
+    0%   { opacity: 0; transform: scale(1.4); filter: blur(4px); }
+    55%  { opacity: 0; transform: scale(1.4); filter: blur(4px); }
+    72%  { opacity: 1; transform: scale(1.00); filter: blur(0); }
+    92%  { opacity: 1; transform: scale(1.00); filter: blur(0); }
+    100% { opacity: 0; transform: scale(1.04); filter: blur(0); }
+  }
+  @keyframes resultStampOosSub {
+    0%, 70% { opacity: 0; transform: translateY(14px); }
+    82%     { opacity: 1; transform: translateY(0); }
+    94%     { opacity: 1; transform: translateY(0); }
+    100%    { opacity: 0; transform: translateY(0); }
+  }
+  @keyframes resultScreenFlash {
+    /* Stage 3 polish: brief white blink, then SOLID black hold, then fade.
+       Previously this baked in a translucent darken-over-gameplay effect;
+       now the overlay is opaque black so stamps don't compete with HUD. */
+    0%   { background: #ffffff; }
+    8%   { background: #ffffff; }
+    18%  { background: #000000; }
+    90%  { background: #000000; }
+    100% { background: rgba(0, 0, 0, 0); }
+  }
+  /* OUT OF SERVICE keeps screen black the whole time. */
+  @keyframes resultScreenFlatlineHold {
+    0%   { background: #1a0606; }
+    6%   { background: #ffffff; }
+    14%  { background: #000000; }
+    94%  { background: #000000; }
+    100% { background: rgba(0, 0, 0, 0); }
+  }
+  /* Heartbeat \u2192 flatline draw. The path data is one big QRS bump on
+     the left, then a long flat line to the right. Dashoffset 2000 \u2192 0
+     draws it left to right. */
+  @keyframes resultFlatlineDraw {
+    0%   { stroke-dashoffset: 2000; }
+    100% { stroke-dashoffset: 0; }
+  }
+  @keyframes resultFlatlineFade {
+    0%, 80% { opacity: 1; }
+    100%    { opacity: 0.55; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .result-stamp-overlay.active,
+    .result-stamp-overlay.active .result-stamp-main,
+    .result-stamp-overlay.active .result-stamp-sub,
+    .result-stamp-overlay.outOfService.active .result-stamp-flatline,
+    .result-stamp-overlay.outOfService.active .result-stamp-flatline .ekg-trace {
+      animation: none !important;
+      transition: opacity 0.35s ease;
+    }
+    .result-stamp-overlay.active { background: #000000; }
+    .result-stamp-overlay.outOfService.active .result-stamp-flatline .ekg-trace {
+      stroke-dashoffset: 0;
+    }
+  }
   /* Ship 8: Game-mechanic walkthrough bubble. Fixed-position so it
      stays anchored across the title, driving, encounter, debrief, and
      scene-clear screens. Skip + persistent-skip controls. */
@@ -644,6 +847,10 @@
     font-size: 12px;
     line-height: 1.45;
     padding: 0 12px 8px;
+    /* Stage 3: preserve \n in body text so multi-line scripts (e.g. the
+       clear-scene radio walkthrough) render as separate lines instead of
+       collapsing into one blob. */
+    white-space: pre-line;
   }
   #enc-walkthrough .ew-required {
     font-size: 10px;
@@ -1602,21 +1809,32 @@
            font-size:10px; margin-bottom:6px;
            display:flex; justify-content:space-between; align-items:center;">
         <span>📋 PATIENT NOTES</span>
-        <span style="font-size:8px; opacity:0.7;">🔍 CLICK TO EXPAND</span>
+        <!-- Stage 3: make the "expand to form" affordance obvious. The
+             popup body renders the CMU Refusal form during a refusal,
+             the Transfer-of-Care form during ALS handoff, or a generic
+             run-sheet otherwise — same click, context-aware target. -->
+        <span style="font-size:9px; opacity:0.95; color:#ffd166;
+              background:#1a1a2e; padding:2px 8px; border-radius:3px;
+              border:1px solid #ffd166; letter-spacing:1px;">📄 OPEN FORM</span>
       </div>
       <div id="patient-notes-body"></div>
     </div>
     <!-- Stage 2.9.5i: full-screen patient notes popup. Larger version of
          the run-sheet notes for when the player wants to read it without
-         squinting. Triggered by clicking the patient notes panel. -->
+         squinting. Triggered by clicking the patient notes panel.
+         Stage 3 polish: per user feedback, sized like a normal letter
+         document (~860px wide), NOT a stretched fullscreen sheet. Outer
+         backdrop has comfortable padding so the game HUD is still
+         visible around the form. -->
     <div id="patient-notes-popup" style="display:none; position:fixed;
          inset:0; background:rgba(0, 0, 0, 0.82); z-index:200;
          align-items:flex-start; justify-content:center;
-         padding:20px; box-sizing:border-box; overflow-y:auto;"
+         padding:24px; box-sizing:border-box; overflow-y:auto;"
          onclick="closePatientNotesPopup(event)">
       <div style="background:#fff; border:2px solid #1a1a2e;
            border-radius:6px; padding:0; max-width:880px;
-           width:96%; min-height:200px;
+           width:90vw; min-height:200px; max-height:92vh;
+           overflow-y:auto;
            color:#1a1a2e; font-family:Arial,Helvetica,sans-serif;
            box-shadow:0 0 32px rgba(0,0,0,0.7); margin:auto;"
            onclick="event.stopPropagation()">
@@ -1811,6 +2029,22 @@
       flex:1; overflow-y:auto; padding:8px 10px; min-height:140px; max-height:260px;
       display:flex; flex-direction:column; gap:6px;
     "></div>
+    <!-- Stage 3: Visible refusal checklist. Shown only when the patient
+         refusal speech is active (chatState.patientActive). Live-updates
+         as the player covers each concept in chat. Updated by
+         _renderRefusalChecklist(). Hidden by default. -->
+    <div id="refusal-checklist" style="
+      display:none; padding:6px 10px; border-top:1px solid #2a3a44;
+      background:rgba(102, 56, 169, 0.10); font-size:10.5px; line-height:1.5;
+      color:#e0d8f0;
+    ">
+      <div style="font-weight:bold; letter-spacing:1.2px; color:#c77dff;
+                  margin-bottom:3px;">REFUSAL CHECKLIST</div>
+      <div id="refusal-checklist-rows"></div>
+      <div id="refusal-checklist-block" style="
+        margin-top:4px; font-size:10px; color:#ffd166; display:none;
+      "></div>
+    </div>
     <div style="border-top:1px solid #2a3a44; padding:6px 8px; display:flex; gap:6px;">
       <input id="chat-input" type="text" placeholder='Press "/" to type in chat'
         style="flex:1; background:#1a1a2e; border:1px solid #3a3a44; color:#f4f1de;
@@ -1877,6 +2111,22 @@
                 style="display:none;">REPLAY DEBRIEF</button>
         <button class="secondary" id="title-credits-btn">CREDITS</button>
       </div>
+      <!-- Stage 3: walkthrough-on-first-call toggle. Checked by default. The
+           value is persisted in localStorage. If unchecked, the first-call
+           walkthrough is suppressed for the upcoming shift. After a shift
+           where the walkthrough actually ran on a call, this toggle auto-
+           unchecks on the next title-screen visit (so it acts as "show it
+           once and then leave me alone" by default). -->
+      <label id="title-walkthrough-toggle" style="
+          display:inline-flex; align-items:center; gap:10px; margin-top:14px;
+          padding:8px 14px; border:1px dashed #3a3a4e; border-radius:4px;
+          background:rgba(20,22,32,0.55); font-family:'Courier New',monospace;
+          color:#f4f1de; font-size:11px; letter-spacing:1.5px;
+          cursor:pointer; user-select:none; text-transform:uppercase;">
+        <input type="checkbox" id="title-walkthrough-cb" checked
+               style="width:14px; height:14px; cursor:pointer; accent-color:#ffd166;">
+        <span>Walkthrough on first call</span>
+      </label>
     </div>
     <!-- Ship 3: small computer-only warning, bottom-center of the title
          screen. The game requires WASD keys for driving and a mouse for
@@ -2542,14 +2792,13 @@
   <div class="screen" id="encounter" style="display:none;">
     <div class="case-card">
       <span class="role-tag" id="enc-role">EMT</span>
-      <h2 id="enc-title">Call placeholder</h2>
-      <p id="enc-desc">Stage 2 will replace this with the full Pokemon-style menu.</p>
-      <div class="vitals" id="enc-vitals">[ vitals here ]</div>
+      <h2 id="enc-title">Patient Encounter</h2>
+      <p id="enc-desc">Loading call details\u2026</p>
+      <div class="vitals" id="enc-vitals">\u2014</div>
     </div>
     <!-- Stage 1.5: Partner Quiz panel. Hidden by default; shown when the
          player clicks START ASSESSMENT and the current call has a quiz.
-         Multiple-choice → feedback → unlocks disposition buttons.
-         Wrong answers don't fail the call yet (Stage 2 will add scoring). -->
+         Multiple-choice → feedback → unlocks disposition buttons. -->
     <div id="quiz-panel" style="display:none; max-width:560px; margin:14px auto 0;
          background:rgba(255,209,102,0.08); border:1px solid #ffd166; border-radius:6px;
          padding:14px 18px; text-align:left; font-size:13px; line-height:1.55;">
@@ -2707,6 +2956,25 @@
       <button class="primary" id="debrief-continue">CONTINUE</button>
     </div>
   </div>
+  <!-- Stage 3: GTA-style outcome stamp. A short full-screen flash + slammed
+       headline that appears just before the debrief card. One overlay, type
+       chosen via class swap (saved / notSaved / criticalFailure / alsTransfer /
+       refusalComplete / treatRelease / transportComplete / outOfService).
+       Auto-hides after ~1.8s (3.2s for outOfService); pointer-events:none so
+       the Continue button stays clickable. -->
+  <div class="result-stamp-overlay" id="result-stamp-overlay">
+    <!-- Heartbeat \u2192 flatline strip behind the title. Only visible on
+         the .outOfService variant. The dashoffset animation in CSS draws
+         a single QRS bump then a long flat line. -->
+    <div class="result-stamp-flatline" id="result-stamp-flatline">
+      <svg viewBox="0 0 1200 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path class="ekg-trace"
+              d="M 0 50 L 240 50 L 260 50 L 280 30 L 295 70 L 310 12 L 325 90 L 340 36 L 360 50 L 1200 50" />
+      </svg>
+    </div>
+    <div class="result-stamp-main" id="result-stamp-main">PATIENT SAVED!</div>
+    <div class="result-stamp-sub" id="result-stamp-sub">+10 RESPECT</div>
+  </div>
   <div class="screen" id="pause-menu" style="display:none;">
     <div class="pause-card">
       <h1>PAUSED</h1>
@@ -2844,6 +3112,50 @@ const HANDBRAKE_DECEL = 200;
 const ZOOM_MIN = 2.6;
 const ZOOM_MAX = 3.4;
 const ZOOM_LERP = 1.4;
+
+// Stage 3 perf: debounced localStorage save scheduler. Batches non-critical
+// writes (audio sliders, panel positions, walkthrough preferences) into a
+// single flush so high-frequency UI events (drag, slider input) don't fire
+// one localStorage.setItem per pixel. Critical writes (achievements, final
+// shift save, last debrief) still go through direct localStorage.setItem.
+const _storageSaveQueue = {};
+let   _storageSaveTimer = null;
+function _scheduleStorageSave(key, value, delay) {
+  if (delay == null) delay = 300;
+  _storageSaveQueue[key] = value;
+  if (_storageSaveTimer) return;
+  _storageSaveTimer = setTimeout(() => {
+    const keys = Object.keys(_storageSaveQueue);
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i];
+      const v = _storageSaveQueue[k];
+      try {
+        localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+      } catch (e) { /* quota / blocked — fail silently */ }
+      delete _storageSaveQueue[k];
+    }
+    _storageSaveTimer = null;
+  }, delay);
+}
+function _flushStorageSavesNow() {
+  if (!_storageSaveTimer) return;
+  clearTimeout(_storageSaveTimer);
+  _storageSaveTimer = null;
+  const keys = Object.keys(_storageSaveQueue);
+  for (let i = 0; i < keys.length; i++) {
+    const k = keys[i];
+    const v = _storageSaveQueue[k];
+    try {
+      localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+    } catch (e) {}
+    delete _storageSaveQueue[k];
+  }
+}
+// Flush pending saves on tab close so the last slider drag isn't lost.
+try {
+  window.addEventListener('beforeunload', _flushStorageSavesNow);
+} catch (e) {}
+
 // Chunks — make sure we ALWAYS have far-ahead terrain
 const CHUNK_SIZE = 1120;      // multiple of GRID (280 * 4)
 const CHUNK_RADIUS = 3;       // 7x7 = 49 chunks loaded; ~7800 wide => never empty
@@ -4350,9 +4662,47 @@ function ensureChunks() {
   // Stage 2.9.5o: invalidate the active-buildings cache only when the chunk
   // set actually changes \u2014 not every frame.
   if (chunksChanged) _activeBuildingsCache = null;
-  trafficCars = [];
-  for (const chunk of chunks.values()) {
-    for (const c of chunk.traffic) trafficCars.push(c);
+  // Stage 3 perf: trafficCars was being rebuilt every single frame (called
+  // from the main loop()), even when no chunks were added or removed. With
+  // 8-16 active chunks each holding 6-20 cars, that's a fresh ~100-300-entry
+  // array allocation + 100-300 pushes every frame \u2014 measurable GC
+  // pressure and a real lag source on lower-end machines. Now we rebuild
+  // the flat array only when the chunk set actually changes (same pattern
+  // as _activeBuildingsCache directly above). The traffic-update loop
+  // mutates the existing car objects in place, so the array stays valid.
+  if (chunksChanged) {
+    trafficCars = [];
+    for (const chunk of chunks.values()) {
+      for (const c of chunk.traffic) trafficCars.push(c);
+    }
+  }
+  // Stage 3 perf: hard LRU cap on the chunk cache. The deferred-eviction
+  // path above can leave stale chunks around when a visible car keeps a
+  // chunk alive longer than its useful life; over a long shift this adds
+  // up. If we exceed MAX_CACHED_CHUNKS, drop the chunks farthest from the
+  // camera until we're back under the cap. Chunks inside the active
+  // visible radius (still on screen) are protected from eviction.
+  const MAX_CACHED_CHUNKS = 100;
+  if (chunks.size > MAX_CACHED_CHUNKS) {
+    const camChunkCx = Math.floor(cam.x / CHUNK_SIZE);
+    const camChunkCz = Math.floor(cam.y / CHUNK_SIZE);
+    const candidates = [];
+    for (const key of chunks.keys()) {
+      if (wanted.has(key)) continue;                // protected (in viewport)
+      const parts = key.split(',');
+      const cx = parseInt(parts[0], 10);
+      const cz = parseInt(parts[1], 10);
+      const dx = cx - camChunkCx;
+      const dz = cz - camChunkCz;
+      candidates.push({ key, d2: dx * dx + dz * dz });
+    }
+    // Sort by distance descending — farthest first.
+    candidates.sort((a, b) => b.d2 - a.d2);
+    while (chunks.size > MAX_CACHED_CHUNKS && candidates.length) {
+      const c = candidates.shift();
+      chunks.delete(c.key);
+      _activeBuildingsCache = null;
+    }
   }
 }
 function getActiveBuildings() {
@@ -8976,6 +9326,194 @@ function patientDistractionLine(arch) {
 // Detect whether the player has hit each required speech element.
 // Permissive regex — we want the player to be able to phrase the speech
 // naturally, not type magic words. We look for the *concept*.
+//
+// Stage 3 — Refusal chat overhaul. The original model demanded 4 specific
+// concepts in any order ("identity", "tools", "risks", "advice") plus a
+// bonus AMA framing slot, with an 8-exchange cap. Players had to fish for
+// exact phrases ("we are EMTs not doctors", "we don't have hospital tools")
+// before the chatbot would accept their message — which felt like a
+// keyword puzzle, not a refusal conversation.
+//
+// The new model tracks six concepts, but only four are usually required:
+//   recommendation, risks, understanding, returnPrecautions (or documentation),
+// with medicalCommand required ONLY for high-risk refusals. The old
+// identity/tools concepts are now bonus credit rather than gates.
+//
+// Checkers below are intentionally forgiving — any common phrasing of the
+// concept should trigger the slot. They also stack: one message can mark
+// multiple concepts.
+
+// --- NEW (Stage 3) concept checkers ---------------------------------------
+// Recommendation: did the player recommend going to the hospital / being
+// evaluated / accepting transport?
+function _patientCheckRecommendation(msg) {
+  return /\b(recommend|suggest|advise|advis(ing|ed)|encourag(e|ing|ed))\b/.test(msg)
+      || /\b(should|need to|want you to|gotta|got to|have to|ought to)\s+(go|come|be evaluated|be checked|be seen|get (checked|seen|evaluated|treated))/.test(msg)
+      || /\b(go to|come to|head to|let us take you to|take you to|transport you to)\s+(the\s+)?(er|ed|hospital|emergency)/.test(msg)
+      || /\b(go to the|come to the)\s+(er|ed|hospital|emergency|emergency department|emergency room)\b/.test(msg)
+      || /\b(get (you )?(checked|seen|evaluated|looked at))\b/.test(msg)
+      || /\b(ambulance|transport)\s+(to|you|us)\b/.test(msg)
+      || /\b(needs?\s+(a\s+)?(hospital|er|ed|doctor|evaluation|workup))\b/.test(msg)
+      || /\b(medical\s+evaluation|medical\s+work\s*up|medical\s+attention)\b/.test(msg)
+      || /\bsee\s+a\s+doctor\b/.test(msg);
+}
+
+// Understanding / teach-back: did the player ask the patient to verbalize
+// or confirm understanding of the risks?
+function _patientCheckUnderstanding(msg) {
+  return /\b(do you understand|do you get|understand the risks|understand what|understand that)\b/.test(msg)
+      || /\b(can you (repeat|tell me|explain|say) (it )?(back|to me))\b/.test(msg)
+      || /\b(tell me back|repeat back|explain back)\b/.test(msg)
+      || /\b(verbalize|acknowledge|do you accept|accept(s|ing)?\s+(the\s+)?risks?)\b/.test(msg)
+      || /\b(still\s+(want\s+to\s+)?refuse|still\s+(don'?t|do not)\s+want)\b/.test(msg)
+      || /\b(do you still want to refuse|are you sure you want to refuse)\b/.test(msg)
+      || /\b(you know what could happen|know the risks)\b/.test(msg)
+      || /\b(assumes?\s+(the\s+)?risks?|assuming (the )?risks?)\b/.test(msg)
+      || /\b(in your own words|in your words)\b/.test(msg);
+}
+
+// Return precautions / alternatives: did the player tell the patient what
+// to do if symptoms return or worsen?
+function _patientCheckReturnPrecautions(msg) {
+  return /\b(call\s+9-?1-?1|call\s+us\s+(back|again)|call\s+(back|again)|call back)\b/.test(msg)
+      || /\b(if\s+(it\s+)?(gets?|gett(ing)?|becomes?)\s+(worse|worsen|bad|worse))/.test(msg)
+      || /\b(if\s+(any|the\s+)?(symptoms?\s+)?(return|come back|worsen|get worse|continue))/.test(msg)
+      || /\b(go\s+(to|back\s+to)\s+the\s+(er|ed|hospital|emergency))\b/.test(msg)
+      || /\b(urgent\s+care|student\s+health|health\s+services|caps)\b/.test(msg)
+      || /\b(see\s+(your\s+)?(doctor|md|pcp|primary|provider))\b/.test(msg)
+      || /\b(don'?t\s+be\s+alone|stay\s+with|sober\s+(friend|buddy)|with\s+(a\s+)?(roommate|ra|friend))\b/.test(msg)
+      || /\b(follow.?up|return\s+precautions|come\s+back\s+if)\b/.test(msg)
+      || /\b(change\s+your\s+mind|can\s+always\s+call)\b/.test(msg);
+}
+
+// Documentation / legal framing: did the player mention the form, signing,
+// or refusal documentation?
+function _patientCheckDocumentation(msg) {
+  return /\b(sign(ing|ature)?|signed)\b/.test(msg)
+      || /\b(refusal\s+(form|paper)|paperwork|the\s+form|this\s+form|rma|r\.\s*m\.\s*a)\b/.test(msg)
+      || /\b(document(ing|ation|ed)?|on\s+record|for\s+the\s+record)\b/.test(msg)
+      || /\b(witness|witnesses|notarize)\b/.test(msg)
+      || /\b(clear\s+you|release\s+you|let\s+you\s+go)\b/.test(msg)
+      || /\b(ama|against\s+medical\s+advice|leaving\s+against)\b/.test(msg);
+}
+
+// Medical command: did the player mention calling medical control / physician?
+function _patientCheckMedicalCommand(msg) {
+  return /\b(med(ical)?\s+(command|control|consult|consultation))\b/.test(msg)
+      || /\b(med\s*command|med\s*control)\b/.test(msg)
+      || /\b(doctor\s+on\s+(the\s+)?(radio|phone|line))\b/.test(msg)
+      || /\b(physician\s+(consult|on|call))\b/.test(msg)
+      || /\b(patch\s+(us\s+)?(to|in))\b/.test(msg)
+      || /\b(contact\s+(med\s*)?(command|control|the\s+physician))\b/.test(msg)
+      || /\b(call\s+(med\s*)?(command|control))\b/.test(msg)
+      || /\b(consult\s+(with\s+)?(med\s*)?(command|control|the\s+physician))\b/.test(msg);
+}
+
+// Bonus: "we're EMTs not doctors" — kept as a CONCEPT credit but no
+// longer required. Same regex as the old patientCheckIdentity for parity.
+function _patientCheckBonusEmsNotDoctor(msg) {
+  return /\b(we'?re|i'?m|i am|we are|we'?re only|just)\s+(an?\s+)?(emt|emts|emergency medical|paramedic|paramedics|first responder)/.test(msg)
+      || /\bnot\s+(a\s+)?(doctor|doctors|md|physician|physicians)\b/.test(msg)
+      || /\bnot\s+(an?\s+)?(er\s+doc|er\s+physician)\b/.test(msg)
+      || /\baren'?t\s+(doctors|physicians|mds)\b/.test(msg)
+      || /\bcan'?t\s+diagnose\b/.test(msg);
+}
+
+// Bonus: "we don't have hospital tools" — kept as a CONCEPT credit but no
+// longer required. Same regex as the old patientCheckTools for parity.
+function _patientCheckBonusLimitedTools(msg) {
+  return /\b(don'?t|do not|cannot|can'?t)\s+have\s+(the\s+)?(tools|equipment|gear|labs|imaging|x-?ray|ct|mri|tests|machines)/.test(msg)
+      || /\b(no|without)\s+(labs|imaging|x-?ray|ct|mri|blood ?work|ekg|tests|equipment)\b/.test(msg)
+      || /\b(limited?\s+tools?|limited\s+(equipment|gear|capabilities|scope))/.test(msg)
+      || /\b(only\s+(do\s+)?(a\s+)?field\s+assessment|field\s+assessment\s+only)/.test(msg)
+      || /\bcan'?t\s+rule\s+out\b/.test(msg);
+}
+
+// Is this a high-risk refusal? Returns true when the dispatch / vitals /
+// tags suggest the player should patch to medical command before clearing.
+function patientRefusalIsHighRisk() {
+  const d = (game.pkm && game.pkm.dispatch) || null;
+  const tags = (game.pkm && game.pkm.callTags) || [];
+  const has = (k) => tags.indexOf(k) !== -1;
+  // Concerning tag families
+  if (has('cardiac') || has('shock') || has('resp') || has('neuro') ||
+      has('tox') || has('arrest') || has('pneumothorax') || has('tamponade')) {
+    return true;
+  }
+  // Suicidal / psych with safety concern
+  if (has('psych') && d && /suicid|ideation|self.harm|harm/i.test((d.title || '') + ' ' + (d.desc || ''))) {
+    return true;
+  }
+  // Concerning chief complaints
+  if (d) {
+    const text = ((d.title || '') + ' ' + (d.desc || '')).toLowerCase();
+    if (/chest pain|sob|short of breath|dyspnea|hypoxia|syncope|fainted|head injury|tbi|concussion|altered|aloc|ams|stroke|seizure|overdose/.test(text)) {
+      return true;
+    }
+  }
+  // Abnormal vitals
+  const v = (typeof pkmCurrentVitalNumbers === 'function') ? pkmCurrentVitalNumbers() : null;
+  if (v) {
+    if (v.hr   < 50 || v.hr   > 110) return true;
+    if (v.sbp  < 100 || v.sbp > 180) return true;
+    if (v.rr   < 12 || v.rr   > 24)  return true;
+    if (v.spo2 < 94) return true;
+  }
+  // E0/E1 priority dispatches default to high-risk
+  if (d && /E0|E1|PRIORITY 1|PRIORITY 2/i.test((d.erating || '') + ' ' + (d.priority || ''))) {
+    return true;
+  }
+  return false;
+}
+
+// Is the patient blocked from refusing entirely (no capacity)?
+function patientRefusalCapacityBlocked() {
+  // Stage 3: per spec — don't use the patient chat itself as a capacity
+  // assessment. If the encounter already assessed orientation/capacity
+  // (via clinicalProgress.loc), trust that. Patient is blocked only if
+  // there's a hard reason — unconscious, intoxicated to the point of
+  // impairment, or pediatric without guardian pathway.
+  if (!game.pkm) return false;
+  if (game.pkm.unconscious || game.pkm.patientDead) return true;
+  const tags = game.pkm.callTags || [];
+  // Treat 'tox' patients as capacity-blocked unless an AVPU check has been
+  // done AND came back alert (i.e., player verified competency).
+  const cp = game.pkm.clinicalProgress || {};
+  const alertVerified = !!cp.loc && /alert/i.test(String(game.pkm.findings && game.pkm.findings['Mental'] || ''));
+  if (tags.indexOf('tox') !== -1 && !alertVerified) return true;
+  // Pediatric without guardian pathway — flagged on dispatch / age.
+  const d = game.pkm.dispatch;
+  if (d) {
+    const text = ((d.title || '') + ' ' + (d.desc || '')).toLowerCase();
+    if (/\b(minor|child|peds|pediatric|infant|toddler)\b/.test(text)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Concept-threshold completion check. Returns { ok, reason }.
+function patientRefusalCanComplete() {
+  const p = chatState.patientProgress || {};
+  if (patientRefusalCapacityBlocked()) {
+    return { ok: false, reason: 'capacity' };
+  }
+  const essentials =
+    (p.recommendation || p.risks) &&
+    p.risks &&
+    p.understanding &&
+    (p.returnPrecautions || p.documentation);
+  if (!essentials) {
+    return { ok: false, reason: 'missingConcepts' };
+  }
+  if (patientRefusalIsHighRisk() && !p.medicalCommand) {
+    return { ok: false, reason: 'medicalCommand' };
+  }
+  return { ok: true, reason: 'complete' };
+}
+
+// --- LEGACY (pre-Stage-3) checkers kept for callers that still ask for the
+// old slot names. The new patientReply doesn't use these anymore. -----------
 function patientCheckIdentity(msg) {
   // "we are EMTs not doctors" / "we're not physicians" / "we're EMTs"
   return /\b(we'?re|i'?m|i am|we are|we'?re only|just)\s+(an?\s+)?(emt|emts|emergency medical|paramedic|paramedics|first responder)/.test(msg)
@@ -9374,111 +9912,330 @@ function _scheduleChatHint(channel, hintText) {
   }, 1700);
 }
 // Main patient chatbot. Called by sendChatMessage when the active channel
-// is 'patient'. Tracks which speech elements have been hit, fires
+// is 'patient'. Tracks which speech concepts have been hit, fires
 // distractions, and signs off once the speech is complete.
+//
+// Stage 3 — Concept model. The chat now finishes in 3-4 player messages
+// for normal low-risk refusals. One message can mark multiple concepts at
+// once. Patient nudges directly ask for the most-missing concept rather
+// than fishing for exact wording. After exchange 4, either complete the
+// refusal (if safe) or surface the exact blocker (capacity / medical
+// command / missing concept) instead of looping the conversation forever.
 function patientReply(msg) {
   msg = (msg || '').toLowerCase().trim();
   if (!chatState.patientActive) return null;
   const arch = chatState.patientArchetype || 'compliant';
   const callType = chatState.patientCallType || 'generic';
   const p = chatState.patientProgress || (chatState.patientProgress = {
-    identity: false, tools: false, risks: false, advice: false, ama: false,
+    recommendation: false, risks: false, understanding: false,
+    returnPrecautions: false, documentation: false, medicalCommand: false,
   });
-  // Stage 2.0h: count exchanges so the patient eventually commits even if
-  // the player never hits all four slots. After 7 back-and-forth messages,
-  // the patient signs the refusal and the closing line names what was
-  // missed — so the player learns what to cover next time without the
-  // conversation looping forever.
-  // Stage 2.9.5i: per author note, a "refusal" is NOT "against medical
-  // advice." AMA is a distinct scenario where the patient ends the
-  // encounter despite the player's recommendation. For default refusal
-  // calls, the player only needs the 4 core checkpoints: identity,
-  // tools, risks, and home-care advice. AMA is no longer required.
+  const b = chatState.patientBonus || (chatState.patientBonus = {
+    emsNotDoctor: false, limitedTools: false,
+  });
   chatState.patientExchanges = (chatState.patientExchanges || 0) + 1;
-  // Update the progress slots based on this player message.
+
+  // Update concept progress from this message. One message can credit
+  // multiple concepts (e.g. "I recommend the ER because you could die
+  // from this — do you understand?" hits recommendation + risks +
+  // understanding all in one shot).
   let madeProgress = false;
-  if (!p.identity && patientCheckIdentity(msg)) { p.identity = true; madeProgress = true; }
-  if (!p.tools    && patientCheckTools(msg))    { p.tools    = true; madeProgress = true; }
-  if (!p.risks    && patientCheckRisks(msg))    { p.risks    = true; madeProgress = true; }
-  if (!p.advice   && patientCheckAdvice(msg, callType)) { p.advice = true; madeProgress = true; }
-  // AMA tracking is still here as a "bonus" credit if the player happens to
-  // mention it, but is no longer required for completion.
-  if (!p.ama      && patientCheckAMA(msg))      { p.ama      = true; madeProgress = true; }
+  if (!p.recommendation    && _patientCheckRecommendation(msg))    { p.recommendation = true;    madeProgress = true; }
+  if (!p.risks             && patientCheckRisks(msg))              { p.risks = true;             madeProgress = true; }
+  if (!p.understanding     && _patientCheckUnderstanding(msg))     { p.understanding = true;     madeProgress = true; }
+  if (!p.returnPrecautions && _patientCheckReturnPrecautions(msg)) { p.returnPrecautions = true; madeProgress = true; }
+  if (!p.documentation     && _patientCheckDocumentation(msg))     { p.documentation = true;     madeProgress = true; }
+  if (!p.medicalCommand    && _patientCheckMedicalCommand(msg))    { p.medicalCommand = true;    madeProgress = true; }
+  // Bonus concepts — credit but don't gate.
+  if (!b.emsNotDoctor      && _patientCheckBonusEmsNotDoctor(msg)) { b.emsNotDoctor = true; }
+  if (!b.limitedTools      && _patientCheckBonusLimitedTools(msg)) { b.limitedTools = true; }
+
+  // Stage 3: refresh the visible refusal checklist after parsing this
+  // message so the player can see exactly which concepts are now covered.
+  try { _renderRefusalChecklist(); } catch (_eRc) {}
+
   if (patientLooksLikeRedirect(msg) || madeProgress) {
     chatState.patientDistractionStreak = Math.max(0, chatState.patientDistractionStreak - 1);
   }
-  // Completion based on 4 core checkpoints (NO AMA required).
-  const complete = p.identity && p.tools && p.risks && p.advice;
-  // Cap the conversation at 8 exchanges. In the timeout case, the
-  // patient still signs, but the closing line lists what was missed.
-  const timedOut = !complete && chatState.patientExchanges >= 8;
-  if (complete || timedOut) {
+
+  // Can we end the conversation right now?
+  const status = patientRefusalCanComplete();
+  const atOrPastCap = chatState.patientExchanges >= 4;
+
+  if (status.ok) {
     chatState.patientSpeechComplete = true;
-    setTimeout(() => finishPatientSpeech(), 4000);
-    if (complete) {
-      return patientClosingLine(arch, callType);
-    }
-    // Force-commit: build a "signing anyway, but you missed X" line so
-    // the player gets a clear retrospective on what they should've said.
-    const missed = [];
-    if (!p.identity) missed.push('that you\u2019re EMTs, not doctors');
-    if (!p.tools)    missed.push('that you don\u2019t have hospital diagnostic equipment');
-    if (!p.risks)    missed.push('the risks of refusing \u2014 worsening / disability / death');
-    if (!p.advice)   missed.push('home-care advice for what to watch out for');
-    const missedStr = missed.length === 1
-      ? missed[0]
-      : missed.slice(0, -1).join(', ') + ', and ' + missed[missed.length - 1];
-    return 'Okay, I\u2019ll sign. But for next time \u2014 you didn\u2019t tell me ' + missedStr + '. ' +
-           'I\u2019ll figure it out.';
+    setTimeout(() => finishPatientSpeech(), 3500);
+    return patientClosingLine(arch, callType);
   }
+
+  // Past the 4-exchange cap. Surface the exact blocker instead of
+  // looping. Three blocker types: capacity (escalation required),
+  // medicalCommand (high-risk only), missingConcepts (which one?).
+  if (atOrPastCap) {
+    if (status.reason === 'capacity') {
+      chatState.patientSpeechComplete = true;
+      setTimeout(() => finishPatientSpeech(), 4500);
+      return '\u26A0 This patient can\u2019t safely refuse \u2014 capacity is in question. ' +
+             'Escalate: contact medical command, request a guardian if a minor, or ' +
+             'involve law enforcement / mental-health pathway as appropriate. The patient ' +
+             'is not being cleared on a refusal until that\u2019s resolved.';
+    }
+    if (status.reason === 'medicalCommand') {
+      // Stay open ONE more exchange to give the player a chance to patch
+      // \u2014 but make the requirement explicit, not a vague nudge.
+      if (chatState.patientExchanges >= 5) {
+        chatState.patientSpeechComplete = true;
+        setTimeout(() => finishPatientSpeech(), 4500);
+        return '\u26A0 This is a high-risk refusal and medical command was not contacted. ' +
+               'For next time \u2014 patch to med control on these (chest pain, SOB, ' +
+               'syncope, head injury, abnormal vitals, AMS, suicidal ideation, minor, ' +
+               'or any serious-mechanism call) before clearing the refusal.';
+      }
+      return '\u26A0 This one\u2019s high-risk \u2014 chest pain / SOB / abnormal vitals / ' +
+             'head injury / AMS / etc. Patch to MEDICAL COMMAND before clearing the ' +
+             'refusal. Say something like: "Dispatch, patch us to medical command for a ' +
+             'high-risk refusal."';
+    }
+    // missingConcepts at cap: list the one most-important missing concept.
+    const blocker = _patientFirstMissingConcept(p);
+    const blockerWords = _patientConceptHint(blocker);
+    chatState.patientSpeechComplete = true;
+    setTimeout(() => finishPatientSpeech(), 4500);
+    return '\u26A0 Refusal not complete \u2014 you still need to cover ' +
+           blockerWords.label.toUpperCase() + '. ' + blockerWords.example +
+           ' I\u2019ll sign anyway this time so we can clear, but document that.';
+  }
+
+  // Still in normal-conversation mode (exchanges < 4). Patient throws
+  // a distraction occasionally, OR asks for the next-most-important
+  // missing concept directly.
   if (patientShouldDistract(arch)) {
     chatState.patientDistractionStreak += 1;
     return patientDistractionLine(arch);
   }
+
+  // Ack what they JUST covered, then nudge the next concept.
   let ack = '';
   if (madeProgress) {
-    if (p.identity && !p._ackedIdentity) { ack = 'Okay, you\u2019re EMTs, not doctors. Got it. '; p._ackedIdentity = true; }
-    else if (p.tools && !p._ackedTools)  { ack = 'Right, you don\u2019t have all the hospital stuff here. '; p._ackedTools = true; }
-    else if (p.risks && !p._ackedRisks)  { ack = 'Okay, that\u2019s\u2026 yeah. That\u2019s scary actually. '; p._ackedRisks = true; }
-    else if (p.advice && !p._ackedAdvice){ ack = 'Okay, I can do that. '; p._ackedAdvice = true; }
-    else if (p.ama && !p._ackedAma)      { ack = 'Right \u2014 against medical advice. I get what I\u2019m signing. '; p._ackedAma = true; }
-  } else {
-    const partial = patientPartialAck(msg, callType);
-    if (partial) ack = partial + ' ';
+    if (p.recommendation && !p._ackedRec)      { ack = 'Okay, so you think I should go in. '; p._ackedRec = true; }
+    else if (p.risks && !p._ackedRisks)        { ack = 'That\u2019s\u2026 yeah. That\u2019s scary actually. '; p._ackedRisks = true; }
+    else if (p.understanding && !p._ackedUnd)  { ack = 'Yeah, I understand. I get it. '; p._ackedUnd = true; }
+    else if (p.returnPrecautions && !p._ackedRet) { ack = 'Got it \u2014 I\u2019ll call if anything changes. '; p._ackedRet = true; }
+    else if (p.documentation && !p._ackedDoc)  { ack = 'Okay, I\u2019ll sign. '; p._ackedDoc = true; }
+    else if (p.medicalCommand && !p._ackedMC)  { ack = 'Okay, you\u2019re going to call the doctor. '; p._ackedMC = true; }
   }
-  let slot = null;
-  if      (!p.identity) slot = 'identity';
-  else if (!p.tools)    slot = 'tools';
-  else if (!p.risks)    slot = 'risks';
-  else if (!p.advice)   slot = 'advice';
-  // Stage 2.9.5i: AMA is no longer a required next-slot prompt for
-  // standard refusals. The patient won't ask "is this AMA?" anymore.
-  let nudge;
-  if (slot) {
-    nudge = patientLean(p) + pickPatientNudge(slot, arch);
+
+  // Pick the next missing concept and nudge directly.
+  const next = _patientFirstMissingConcept(p);
+  let nudge = '';
+  if (next) {
+    nudge = _patientNudgeForConcept(next, arch);
   } else {
+    // All required concepts present but maybe high-risk command missing.
+    // Should be handled by status.ok above, but defense in depth.
     nudge = 'So\u2026 we\u2019re good? Where do I sign?';
   }
-  // Stage 2.9.5: NPC hint system. After 2 consecutive non-progressing
-  // turns on the same slot, surface an out-of-character hint so the
-  // player knows what specific concept the patient is fishing for. The
-  // patient's in-character nudge ("Are you actually doctors?") happens
-  // first; the hint is a follow-up safety net.
-  if (madeProgress) {
-    chatState.patientStuckCount = 0;
-  } else {
+
+  // Once per shift, on the FIRST hint failure, surface a keyword hint
+  // that names what the patient is fishing for.
+  if (!madeProgress) {
     chatState.patientStuckCount = (chatState.patientStuckCount || 0) + 1;
-    if (chatState.patientStuckCount >= 2 && slot) {
-      _scheduleChatHint('patient', _patientSlotHint(slot, callType));
-      // Reset so the hint doesn't fire every turn forever \u2014 give the
-      // player 2 more turns before re-hinting.
+    if (chatState.patientStuckCount >= 2 && next) {
+      const hint = _patientConceptHint(next);
+      _scheduleChatHint('patient',
+        'Try saying something like: "' + hint.example + '" \u2014 ' +
+        'or use any of these words: ' + hint.keywords.join(', ') + '.');
       chatState.patientStuckCount = 0;
-      // Stage 2.9.5: latch the per-shift hint flag so a "no hint
-      // triggered all shift" run can\u2019t still claim the achievement.
       try { if (game) game.shiftRefusalHintFired = true; } catch (e) {}
     }
+  } else {
+    chatState.patientStuckCount = 0;
   }
+
   return (ack + nudge).trim();
+}
+
+// Stage 3: helper — pick the highest-priority missing concept for nudges.
+function _patientFirstMissingConcept(p) {
+  if (!p.recommendation) return 'recommendation';
+  if (!p.risks) return 'risks';
+  if (!p.understanding) return 'understanding';
+  if (!p.returnPrecautions && !p.documentation) return 'returnPrecautions';
+  if (patientRefusalIsHighRisk() && !p.medicalCommand) return 'medicalCommand';
+  return null;
+}
+
+// Stage 3: short, direct patient nudges per concept. The patient asks for
+// the concept the player still hasn't covered, in plain English.
+function _patientNudgeForConcept(concept, arch) {
+  switch (concept) {
+    case 'recommendation':
+      return 'What do you actually think I should do? Like, are you saying I should go to the hospital, or not?';
+    case 'risks':
+      return 'But like\u2026 what are you worried could happen if I just don\u2019t go?';
+    case 'understanding':
+      return 'Okay\u2026 do you want me to repeat back what I understand?';
+    case 'returnPrecautions':
+      return 'What if it gets worse or comes back? Like, what do I actually do?';
+    case 'documentation':
+      return 'So\u2026 do I sign something? What\u2019s the process?';
+    case 'medicalCommand':
+      return 'Wait \u2014 should you maybe call someone about this? Like, a real doctor?';
+    default:
+      return 'So\u2026 we\u2019re good?';
+  }
+}
+
+// Stage 3: out-of-character keyword hints. Used by the chat-tip system
+// after the player gets stuck on a concept. Returns { label, example, keywords }
+// — keywords list is included verbatim in the hint so the user knows
+// exactly what kind of phrasing the parser is matching.
+function _patientConceptHint(concept) {
+  switch (concept) {
+    case 'recommendation':
+      return {
+        label: 'Recommend evaluation / transport',
+        example: 'I recommend you go to the ER to get evaluated.',
+        keywords: ['recommend', 'should go', 'hospital', 'ER', 'ED', 'be evaluated', 'transport'],
+      };
+    case 'risks':
+      return {
+        label: 'Realistic risks of refusing',
+        example: 'If you refuse, things could get worse \u2014 there\u2019s a real risk of serious illness, disability, or even death.',
+        keywords: ['risk', 'worse', 'serious', 'die', 'death', 'disability', 'permanent', 'pass out', 'stop breathing'],
+      };
+    case 'understanding':
+      return {
+        label: 'Confirm understanding / teach-back',
+        example: 'Do you understand the risks, and do you still want to refuse?',
+        keywords: ['understand', 'do you get', 'tell me back', 'repeat back', 'still refuse', 'verbalize'],
+      };
+    case 'returnPrecautions':
+      return {
+        label: 'Return precautions',
+        example: 'If symptoms return or worsen, call 911 or go to the ER.',
+        keywords: ['call 911', 'if it gets worse', 'come back', 'go to the ER', 'follow up', 'don\u2019t be alone'],
+      };
+    case 'documentation':
+      return {
+        label: 'Document the refusal',
+        example: 'We\u2019ll have you sign the refusal form to document this.',
+        keywords: ['sign', 'refusal form', 'document', 'paperwork', 'RMA', 'witness'],
+      };
+    case 'medicalCommand':
+      return {
+        label: 'Contact medical command',
+        example: 'Dispatch, patch us to medical command for a high-risk refusal.',
+        keywords: ['medical command', 'med control', 'patch', 'physician', 'consult', 'doctor on the radio'],
+      };
+    default:
+      return { label: '\u2014', example: '', keywords: [] };
+  }
+}
+// Legacy stub kept so any pre-Stage-3 caller that goes through patientReply
+// → pickPatientNudge doesn't crash.
+
+// Stage 3: live refusal checklist renderer. Reads from chatState.patientProgress
+// (the concept map) plus capacity / high-risk derived state. Renders a row
+// per concept with a status glyph + label so the player can see exactly
+// what the game still wants. Called from patientReply on every player
+// message, from startPatientRefusalSpeech on open, and from
+// finishPatientSpeech to clear.
+function _renderRefusalChecklist() {
+  const panel = document.getElementById('refusal-checklist');
+  if (!panel) return;
+  if (!chatState.patientActive) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+  const p = chatState.patientProgress || {};
+  // Capacity row: derived from the encounter, not the chat. If the player
+  // already did AVPU/orientation, treat capacity as established.
+  const cp = (game.pkm && game.pkm.clinicalProgress) || {};
+  const capacityOk = !!cp.loc;
+  const capacityBlocked = (typeof patientRefusalCapacityBlocked === 'function')
+    && patientRefusalCapacityBlocked();
+  const isHighRisk = (typeof patientRefusalIsHighRisk === 'function')
+    && patientRefusalIsHighRisk();
+  // Each row: { label, state }. States: complete (green) / incomplete (gray)
+  // / required (amber) / blocked (red) / na (dim).
+  const rowState = (done, opts) => {
+    opts = opts || {};
+    if (opts.blocked) return 'blocked';
+    if (done) return 'complete';
+    if (opts.na) return 'na';
+    if (opts.required) return 'required';
+    return 'incomplete';
+  };
+  const rows = [
+    { label: 'Capacity / orientation',
+      state: rowState(capacityOk, { blocked: capacityBlocked, required: true }) },
+    { label: 'Recommendation explained',
+      state: rowState(!!p.recommendation, { required: true }) },
+    { label: 'Risks explained',
+      state: rowState(!!p.risks, { required: true }) },
+    { label: 'Patient understanding / teach-back',
+      state: rowState(!!p.understanding, { required: true }) },
+    { label: 'Return precautions / safety plan',
+      state: rowState(!!p.returnPrecautions || !!p.documentation, { required: true }) },
+    { label: isHighRisk
+        ? 'Medical command (required \u2014 high risk)'
+        : 'Medical command (not required)',
+      state: rowState(!!p.medicalCommand,
+        { required: isHighRisk, na: !isHighRisk && !p.medicalCommand }) },
+    { label: 'Documentation / witness',
+      state: rowState(!!p.documentation, { required: true }) },
+  ];
+  const glyphFor = (s) => {
+    if (s === 'complete')   return { g: '\u2713', c: '#06d6a0' };
+    if (s === 'required')   return { g: '\u00b7', c: '#ffd166' };
+    if (s === 'blocked')    return { g: '!',      c: '#ef4444' };
+    if (s === 'na')         return { g: '\u2014', c: '#6b6b80' };
+    return                         { g: '\u00b7', c: '#6b6b80' };
+  };
+  const rowsHtml = rows.map(r => {
+    const gc = glyphFor(r.state);
+    const labelColor = r.state === 'blocked' ? '#ef4444'
+                     : r.state === 'complete' ? '#9fe9c8'
+                     : r.state === 'na' ? '#8a8a96'
+                     : '#e0d8f0';
+    return '<div style="display:flex; align-items:center; gap:6px;">' +
+      '<span style="display:inline-block; width:12px; color:' + gc.c + '; ' +
+      'font-weight:700; text-align:center;">' + gc.g + '</span>' +
+      '<span style="color:' + labelColor + ';">' + r.label + '</span></div>';
+  }).join('');
+  const rowsEl = document.getElementById('refusal-checklist-rows');
+  if (rowsEl) rowsEl.innerHTML = rowsHtml;
+  // Blocker line: read from patientRefusalCanComplete().
+  const blockEl = document.getElementById('refusal-checklist-block');
+  if (blockEl) {
+    if (typeof patientRefusalCanComplete === 'function') {
+      const st = patientRefusalCanComplete();
+      if (st.ok) {
+        blockEl.style.display = 'block';
+        blockEl.style.color = '#06d6a0';
+        blockEl.textContent = '\u2713 Refusal can be completed.';
+      } else {
+        let msg;
+        if (st.reason === 'capacity') msg = '! Capacity concern \u2014 refusal not valid until escalated.';
+        else if (st.reason === 'medicalCommand') msg = '! Contact medical command first.';
+        else if (st.reason === 'missingConcepts') {
+          const first = (typeof _patientFirstMissingConcept === 'function')
+            ? _patientFirstMissingConcept(p) : null;
+          const hint = (first && typeof _patientConceptHint === 'function')
+            ? _patientConceptHint(first) : null;
+          msg = hint ? ('Cannot complete: still need \u2014 ' + hint.label.toLowerCase() + '.')
+                     : 'Cannot complete: missing required concepts.';
+        } else {
+          msg = 'Cannot complete refusal yet.';
+        }
+        blockEl.style.display = 'block';
+        blockEl.style.color = (st.reason === 'capacity' || st.reason === 'medicalCommand')
+          ? '#ef4444' : '#ffd166';
+        blockEl.textContent = msg;
+      }
+    } else {
+      blockEl.style.display = 'none';
+    }
+  }
 }
 // Open the patient channel for a CEMS refusal speech. Called from the
 // refusal disposition handler.
@@ -9489,25 +10246,40 @@ function startPatientRefusalSpeech(dispatch, onComplete) {
   chatState.patientArchetype = arch;
   chatState.patientCallType = callType;
   chatState.patientSpeechComplete = false;
-  chatState.patientProgress = { identity: false, tools: false, risks: false, advice: false, ama: false };
+  // Stage 3: concept model. Six required concepts (medicalCommand only
+  // required for high-risk refusals), plus a bonus map for the legacy
+  // identity/tools framing that no longer gates completion.
+  chatState.patientProgress = {
+    recommendation: false, risks: false, understanding: false,
+    returnPrecautions: false, documentation: false, medicalCommand: false,
+  };
+  chatState.patientBonus = { emsNotDoctor: false, limitedTools: false };
   chatState.patientDistractionStreak = 0;
-  chatState.patientExchanges = 0;     // Stage 2.0h: cap at 8 to prevent loops (was 7 pre-AMA-slot)
+  chatState.patientExchanges = 0;     // Stage 3: target 3-4 player messages
   chatState.patientPendingInterjection = null;
-  chatState.patientStuckCount = 0;    // Stage 2.9.5: reset hint counter
+  chatState.patientStuckCount = 0;
   chatState._patientOnComplete = onComplete;
   updatePatientTabUI();
-  // Stage 1.6: register chronological activation.
   noteChannelActivated('patient');
   // Push the patient's opening line.
   chatAppend('patient', 'patient', patientOpeningLine(arch, dispatch));
-  // Nudge from partner so the player knows what's expected. Goes to partner
-  // tab so it doesn't pollute the patient log.
+  // Stage 3 partner hint: replaces the older "EMTs not doctors / no
+  // hospital tools / AMA" framing with the simpler concept-model framing.
+  // Lists the actual keywords the parser is matching so a player can
+  // type naturally and still pass.
   if (partnerAlive()) {
     setTimeout(() => {
-      const partner = (game.partner && game.partner.name) || crewNames()[1];
-      // Stage 2.9 QOL: tip now lists the AMA framing element too.
-      const tip = 'Refusal speech: cover that we\u2019re EMTs not doctors, that we don\u2019t have hospital tools, the risks of refusing (illness/disability/death), home-care advice, and that this is leaving against medical advice (AMA). Use the PATIENT tab.';
-      chatAppend('partner', 'partner', tip);
+      const highRisk = patientRefusalIsHighRisk();
+      const baseTip =
+        'Refusal conversation \u2014 usually done in 3-4 messages. Cover:\n' +
+        '\u2022 Recommend care/transport (words: "recommend", "should go", "hospital", "ER")\n' +
+        '\u2022 Explain realistic risks (words: "risk", "worse", "serious", "die", "permanent")\n' +
+        '\u2022 Confirm understanding (words: "understand", "still refuse", "tell me back")\n' +
+        '\u2022 Return precautions / document (words: "call 911", "if it gets worse", "sign", "refusal form")' +
+        (highRisk
+          ? '\n\u26A0 HIGH-RISK refusal on this one \u2014 you also need to contact MEDICAL COMMAND ("med command", "patch", "consult physician") before clearing.'
+          : '');
+      chatAppend('partner', 'partner', baseTip);
       markChatUnread();
     }, 800);
   }
@@ -9516,6 +10288,9 @@ function startPatientRefusalSpeech(dispatch, onComplete) {
   renderChatTabs();
   renderChatLog();
   markChatUnread();
+  // Stage 3: paint the refusal checklist immediately so the player sees
+  // the required concepts before sending their first message.
+  try { _renderRefusalChecklist(); } catch (_eRc) {}
 }
 // Tear down the patient channel and run the queued completion.
 function finishPatientSpeech() {
@@ -9525,9 +10300,17 @@ function finishPatientSpeech() {
   chatState.patientCallType = null;
   chatState.patientSpeechComplete = false;
   chatState.patientProgress = null;
+  chatState.patientBonus = null;
+  chatState.patientExchanges = 0;
+  chatState.patientStuckCount = 0;
   chatState.patientDistractionStreak = 0;
   chatState.patientPendingInterjection = null;
   chatState._patientOnComplete = null;
+  // Stage 3: hide the refusal-checklist panel now that the speech is done.
+  try {
+    const _rcPanel = document.getElementById('refusal-checklist');
+    if (_rcPanel) _rcPanel.style.display = 'none';
+  } catch (_eRc) {}
   updatePatientTabUI();
   // Stage 1.6: drop from chronological order.
   noteChannelDeactivated('patient');
@@ -10124,6 +10907,11 @@ function renderChatLog() {
       label.textContent = labelText;
       div.appendChild(label);
       const text = document.createElement('div');
+      // Stage 3: preserve newlines in chat text so multi-line bullet hints
+      // (e.g. the refusal-conversation partner tip) render across lines
+      // instead of collapsing into one paragraph. Safe — chat messages
+      // that don't contain \n look identical.
+      text.style.whiteSpace = 'pre-line';
       text.textContent = m.text;
       div.appendChild(text);
     }
@@ -10559,6 +11347,19 @@ function fireDispatch() {
     curbSide,                      // +1 or -1 along perpendicular axis
     dispatch,
   };
+  // Stage 3 fix: the first-call walkthrough has to kick HERE \u2014 when the
+  // call drops \u2014 not later when the player approaches the patient.
+  // The new walkthrough opens with "Read dispatch", "Drive to scene", and
+  // "Approach the patient" steps, all of which need to fire BEFORE
+  // openPkmEncounter runs. The previous wire site (inside openPkmEncounter)
+  // only ran after the player was already next to the patient, so those
+  // first three steps were essentially dead. Wrapped in try/catch so a
+  // walkthrough init error never blocks dispatch from landing.
+  try {
+    if (typeof initFirstCallWalkthroughIfNeeded === 'function') {
+      initFirstCallWalkthroughIfNeeded(dispatch);
+    }
+  } catch (_eWtDispatch) {}
   // Stage 1.5.5: initialize scene state. Tracks patient count, dispositions,
   // and whether MD command was consulted. Cleared when player tells dispatch
   // the scene is clear.
@@ -10924,9 +11725,105 @@ function callTimedOut() {
     ' Try to drive faster on E0/E1 calls — but stay alive.';
   document.getElementById('debrief-result').textContent = 'NO PATIENT SAVED';
   document.getElementById('debrief-result').style.color = '#ef476f';
+  // Stage 3: GTA stamp — call timed out is a loss.
+  showResultStamp('notSaved', { subtitle: 'TIMED OUT' });
   if (typeof _emsqCaptureLastDebrief === 'function') _emsqCaptureLastDebrief();
   document.getElementById('debrief').style.display = 'flex';
   game.mode = 'debrief';
+}
+// ============================================================
+// Stage 3 — GTA-style outcome stamp
+// ============================================================
+// Triggered just before a debrief screen renders. Brief headline +
+// flash + fade. Pure CSS animations; this function only sets text +
+// classes and clears them after the animation completes.
+//
+// type:
+//   'saved' | 'notSaved' | 'criticalFailure' | 'alsTransfer'
+//   | 'refusalComplete' | 'treatRelease' | 'transportComplete'
+// options: { subtitle? }
+//
+// Safe to call multiple times — the overlay is reused. Always
+// stops animation before restarting (forces a reflow).
+const _STAMP_PRESETS = {
+  saved:             { main: 'PATIENT SAVED!',   sub: '+10 RESPECT' },
+  notSaved:          { main: 'PATIENT LOST',     sub: 'CARE FAILED' },
+  criticalFailure:   { main: 'CRITICAL FAILURE', sub: 'REVIEW REQUIRED' },
+  alsTransfer:       { main: 'CARE TRANSFERRED', sub: 'ALS ACCEPTED' },
+  refusalComplete:   { main: 'REFUSAL COMPLETE', sub: 'DOCUMENTED' },
+  treatRelease:      { main: 'TREAT & RELEASE',  sub: 'PATIENT CLEARED' },
+  transportComplete: { main: 'TRANSPORT COMPLETE', sub: 'DESTINATION REACHED' },
+  // Stage 3 polish: out-of-service stamp. Triggered when the rig HP hits 0
+  // or both crew members are down. Runs longer (~3.2s) because the
+  // flatline animation needs time to draw.
+  outOfService:      { main: 'OUT OF SERVICE',   sub: 'UNIT DOWN', duration: 3200 },
+  // Stage 3 polish: full SHIFT COMPLETE banner before the shift-end screen.
+  // Longer hold (~2.4s) so the celebratory text actually lands; rendered
+  // on solid black like the other stamps.
+  shiftComplete:     { main: 'SHIFT COMPLETE',   sub: 'GOOD WORK', duration: 2400 },
+};
+const _STAMP_TYPES = Object.keys(_STAMP_PRESETS);
+function showResultStamp(type, options) {
+  try {
+    const overlay = document.getElementById('result-stamp-overlay');
+    const mainEl  = document.getElementById('result-stamp-main');
+    const subEl   = document.getElementById('result-stamp-sub');
+    if (!overlay || !mainEl || !subEl) return;
+    const preset = _STAMP_PRESETS[type] || _STAMP_PRESETS.saved;
+    const opts = options || {};
+    mainEl.textContent = opts.main || preset.main;
+    subEl.textContent  = opts.subtitle || preset.sub;
+    // Wipe any prior outcome class so colors don't leak between calls.
+    _STAMP_TYPES.forEach(t => overlay.classList.remove(t));
+    overlay.classList.remove('active');
+    // Force reflow so the animation restarts cleanly when this is called
+    // a second time within a single session.
+    void overlay.offsetWidth;
+    overlay.classList.add(type in _STAMP_PRESETS ? type : 'saved');
+    overlay.classList.add('active');
+    // Hide after the animation finishes. Most variants run ~1.8s; the
+    // outOfService flatline beat runs ~3.2s and is configured via
+    // preset.duration. Defensive timer + cleanup.
+    const hideMs = (preset && preset.duration) ? preset.duration + 50 : 1850;
+    clearTimeout(showResultStamp._t);
+    showResultStamp._t = setTimeout(() => {
+      overlay.classList.remove('active');
+      overlay.style.display = 'none';
+      // Reset display after the next paint so the next .active re-applies.
+      setTimeout(() => { overlay.style.display = ''; }, 30);
+    }, hideMs);
+  } catch (_eStamp) { /* never block the debrief */ }
+}
+// Decide which stamp belongs to a debrief based on title + result text.
+// Used by every debrief entry point — wraps the priority table from the
+// implementation brief: died/lost → notSaved, CF override → criticalFailure,
+// ALS handoff → alsTransfer, refusal → refusalComplete, T&R → treatRelease,
+// transport → transportComplete, default → saved.
+function pickResultStampType(ctx) {
+  ctx = ctx || {};
+  const title  = String(ctx.title || '').toUpperCase();
+  const result = String(ctx.result || '').toUpperCase();
+  const kind   = String(ctx.kind || '').toLowerCase();
+  // 1) Death / loss
+  if (/PATIENT (LOST|DIED)|TIMED OUT|FAILURE TO REACH/.test(title) ||
+      /NO PATIENT SAVED/.test(result)) {
+    // 2) CF override is its own dedicated stamp
+    if (/CRITICAL FAILURE|COMPETENCY FAILURE/.test(title + ' ' + result)) {
+      return 'criticalFailure';
+    }
+    return 'notSaved';
+  }
+  // 3) Critical failure independent of death (rare, but possible)
+  if (/CRITICAL FAILURE|COMPETENCY FAILURE/.test(title + ' ' + result)) {
+    return 'criticalFailure';
+  }
+  // 4) Disposition kinds
+  if (kind === 'als') return 'alsTransfer';
+  if (kind === 'refusal') return 'refusalComplete';
+  if (kind === 'treat_release') return 'treatRelease';
+  if (kind === 'transport') return 'transportComplete';
+  // 5) Default
+  return 'saved';
 }
 // ============================================================
 // COLLISION
@@ -11156,6 +12053,22 @@ function renderHP() {
 }
 function gameOver() {
   game.mode = 'gameover';
+  // Stage 3 polish: GTA-style OUT OF SERVICE stamp. Fires the moment the
+  // rig is destroyed or both crew members go down \u2014 same overlay
+  // system as call-outcome stamps, but on a longer (~3.2s) beat with a
+  // heartbeat \u2192 flatline animation behind the title. The game-over
+  // screen still renders underneath as soon as the stamp fades.
+  try {
+    const _crewBoth = Array.isArray(game.crewHP) &&
+                      game.crewHP.length >= 2 &&
+                      game.crewHP[0] <= 0 && game.crewHP[1] <= 0;
+    const _sub = (game.hp <= 0)    ? 'RIG DESTROYED'
+              : _crewBoth          ? 'CREW DOWN'
+                                   : 'UNIT DOWN';
+    if (typeof showResultStamp === 'function') {
+      showResultStamp('outOfService', { subtitle: _sub });
+    }
+  } catch (_eOos) {}
   // Stage 2.8 QOL: shift over via crash/crew-down — record the partial
   // shift to career stats first, then wipe the resume save so the
   // player can't pick up a doomed run.
@@ -13274,32 +14187,20 @@ const PKM_ACTIONS = {
     // those are patient INTERVIEW tasks (you ask the patient questions),
     // not assessment tasks (where you measure something on the body).
     // They live in the TALK menu only as 'Ask SAMPLE' / 'Ask OPQRST'.
-    // Ship 5: Scene size-up actions live at the front of every role's
-    // ASSESS list. They flip the clinicalProgress flags that used to
-    // be auto-credited at encounter open (bsiPpe / sceneSafety /
-    // moiNoi / patientCountResources). The walkthrough also steers
-    // players to them on the first call of the shift.
-    EMT:  ['BSI / PPE',
-           'Scene safety check',
-           'MOI / NOI',
-           'Patient count / call for resources',
-           'General impression', 'Full vitals', 'AVPU / mental status',
+    // Stage 3: Scene size-up actions (BSI/PPE, Scene safety, MOI/NOI,
+    // Patient count/resources) have been REMOVED from ASSESS and now
+    // live exclusively in the SCENE menu (PKM_ACTIONS.scene). The
+    // ASSESS submenu is patient-focused; SCENE is the deliberate
+    // scene-size-up step.
+    EMT:  ['General impression', 'Full vitals', 'AVPU / mental status',
            'Lung sounds', 'Skin signs',
            'Blood glucose', 'Focused exam', 'Stroke screen (BE-FAST)',
            'Rapid trauma exam (DCAP-BTLS)', 'APGAR score (newborn)'],
-    AEMT: ['BSI / PPE',
-           'Scene safety check',
-           'MOI / NOI',
-           'Patient count / call for resources',
-           'General impression', 'Full vitals', 'AVPU / mental status',
+    AEMT: ['General impression', 'Full vitals', 'AVPU / mental status',
            'Lung sounds', 'Skin signs',
            'Blood glucose', 'Focused exam', 'Stroke screen (BE-FAST)', '4-lead monitor',
            'Rapid trauma exam (DCAP-BTLS)', 'APGAR score (newborn)'],
-    CEMS: ['BSI / PPE',
-           'Scene safety check',
-           'MOI / NOI',
-           'Patient count / call for resources',
-           'General impression', 'Full vitals', 'AVPU / mental status',
+    CEMS: ['General impression', 'Full vitals', 'AVPU / mental status',
            'Lung sounds', 'Skin signs',
            'Blood glucose', 'Focused exam', 'Stroke screen (BE-FAST)',
            'Rapid trauma exam (DCAP-BTLS)', 'APGAR score (newborn)'],
@@ -14039,8 +14940,22 @@ function pkmInitState(dispatch) {
   const picked = pkmPickProfile(tags);
   const startHp = (picked.profile.startByErating &&
                    picked.profile.startByErating[erating]) || 70;
-  const ptName = (dispatch && dispatch.title)
-    ? dispatch.title.split(/\s+\u2014|\s+-/)[0].slice(0, 28) : 'Patient';
+  // Stage 3 fix: use the funny nickname (e.g. "Wrong-Place Walter") for the
+  // PATIENT NAME field on forms, not the chief-complaint title. The old code
+  // sliced dispatch.title which surfaced things like "Forearm lac" in the
+  // PATIENT NAME line of the CMU refusal form.
+  let ptName = 'Patient';
+  try {
+    if (typeof pkmComputeNameplate === 'function') {
+      const _np = pkmComputeNameplate(dispatch);
+      // Strip the trailing "  —  24yo M" so only the name lands in the form.
+      ptName = (_np && _np.name) ? _np.name.split('\u2014')[0].trim() : ptName;
+    }
+  } catch (_eNp) {
+    if (dispatch && dispatch.title) {
+      ptName = dispatch.title.split(/\s+\u2014|\s+-/)[0].slice(0, 28);
+    }
+  }
   // Snapshot the disposition plan from the legacy openEncounter so the
   // pkm TREAT submenu can present the right end-of-call options.
   const dispoPlan = game._dispositionPlan || { transport:false, refusal:false, callAls:false };
@@ -14074,6 +14989,12 @@ function pkmInitState(dispatch) {
     findings:        {},                   // Stage 2.0c — gathered assessments
     findingsOrder:   [],                   // Stage 2.0c — insertion order for stable display
     decayMsgIdx:     0,                    // rotating index for decay narration
+    // Stage 3: scene-phase suppression. While the player is doing scene
+    // size-up only (BSI/PPE, scene safety, MOI/NOI, patient count), patient
+    // decay narration is suppressed so they can check MOI/NOI without
+    // spoiling clues like "Bleeding continues to soak through the dressing."
+    // Flips false on the first non-scene action.
+    _sceneOnly:      true,
     hazardBase: 0.18,                      // base per-turn hazard chance
     activeProvider: 0,                     // 0 = player, 1 = partner (after reset)
     needsReset:     false,                 // true when active provider goes down
@@ -14672,16 +15593,19 @@ function _renderPatientNotesPopupBody() {
     ageGender, hpiNarrative, _gathered,
     ptName, incLoc,
   };
-  // Determine which form to render.
-  // 'refusal' kind == CMU Refusal Form. Hospital + ALS handoff context
-  // == Transfer of Care Form. Otherwise generic run-sheet view.
-  // (isRefusal and isAlsContext are computed at the top of this function.)
-  if (isRefusal) {
-    body.innerHTML = _renderRefusalForm(data);
-  } else if (isAlsContext) {
+  // Stage 3: per user request, the popup defaults to the CMU Refusal Form
+  // (the most common "read this aloud" use case during a call), and only
+  // switches to the Transfer-of-Care Form when ALS handoff is EXPLICITLY
+  // active (the medic chat is open or the player committed an ALS
+  // disposition). The legacy run-sheet view is reachable only through
+  // refresh-after-call states where neither refusal nor ALS is in play.
+  if (isAlsContext) {
     body.innerHTML = _renderTransferOfCareForm(data);
   } else {
-    body.innerHTML = _renderRunSheet(data);
+    // Default to refusal form for every active encounter \u2014 it's the
+    // form players need most often during a call and works as a generic
+    // run sheet too (vitals, history, treatments all show up).
+    body.innerHTML = _renderRefusalForm(data);
   }
 }
 // Extract age + gender from dispatch title. Looks for "58yo M",
@@ -14840,10 +15764,26 @@ function _renderRefusalForm(d) {
             '<span style="display:block; border:1px solid #1a1a2e; padding:6px 8px; ' +
               'min-height:50px; margin-top:3px; background:#fafbfc; font-size:11px; ' +
               'line-height:1.5;">' + (d.hpiNarrative || '\u2014') + '</span></div>' +
-          '<div style="margin-bottom:6px;"><b>PMHx:</b> ' + blank(d._gathered(d.pmhx) ? d.pmhx : null, 280) + '</div>' +
-          '<div style="margin-bottom:6px;"><b>ALLERGIES:</b> ' + blank(d._gathered(d.allergy) ? d.allergy : null, 200) +
-            ' &nbsp; <b>MEDICATIONS:</b> ' + blank(d._gathered(d.meds) ? d.meds : null, 200) + '</div>' +
-          '<div style="margin-bottom:6px;"><b>LAST ORAL INTAKE:</b> ' + blank(d._gathered(d.lastOral) ? d.lastOral : null, 280) + '</div>' +
+          // Stage 3: SAMPLE fields render explicit status. If the player
+          // never asked SAMPLE, show "Not documented" in italic gray so
+          // the gap is visible \u2014 don\u2019t fabricate a clean form by
+          // leaving the line blank.
+          '<div style="margin-bottom:6px;"><b>PMHx:</b> ' +
+            (d._gathered(d.pmhx)
+              ? blank(d.pmhx, 280)
+              : '<span style="color:#a0a8b0; font-style:italic;">Not documented</span>') + '</div>' +
+          '<div style="margin-bottom:6px;"><b>ALLERGIES:</b> ' +
+            (d._gathered(d.allergy)
+              ? blank(d.allergy, 200)
+              : '<span style="color:#a0a8b0; font-style:italic;">Not documented</span>') +
+            ' &nbsp; <b>MEDICATIONS:</b> ' +
+            (d._gathered(d.meds)
+              ? blank(d.meds, 200)
+              : '<span style="color:#a0a8b0; font-style:italic;">Not documented</span>') + '</div>' +
+          '<div style="margin-bottom:6px;"><b>LAST ORAL INTAKE:</b> ' +
+            (d._gathered(d.lastOral)
+              ? blank(d.lastOral, 280)
+              : '<span style="color:#a0a8b0; font-style:italic;">Not documented</span>') + '</div>' +
         '</div>' +
         '<div style="background:#dceaf3; padding:6px 10px; border:1px solid #1a1a2e;">' +
           '<div style="font-weight:bold; font-size:10px; padding:4px 0; border-bottom:1px solid #5a7a90;">DATE</div>' +
@@ -14918,7 +15858,11 @@ function _renderRefusalForm(d) {
             ' <b>RISKS EXPLAINED:</b> that the pre-hospital provider can not perform an ' +
             'extensive exam and evaluation and therefore an underlying illness or injury may be ' +
             'missed that may lead to disability and/or death</div>' +
-          '<div style="margin:3px 0;">' + cb(!!refusalSlots.advice) +
+          // Stage 3: was `refusalSlots.advice` (legacy slot). New concept
+          // model splits home-care advice into returnPrecautions and
+          // documentation \u2014 either one fills the "received instructions"
+          // checkbox.
+          '<div style="margin:3px 0;">' + cb(!!(refusalSlots.returnPrecautions || refusalSlots.documentation)) +
             ' <b>RECEIVED INSTRUCTIONS FOR:</b></div>' +
           '<div style="margin-left:22px; font-size:10px;">' +
             cb(false) + ' HEAD INJ. &nbsp; ' + cb(false) + ' FEVER &nbsp; ' +
@@ -14933,7 +15877,10 @@ function _renderRefusalForm(d) {
             cb(false) + ' PCP &nbsp; ' + cb(false) + ' CMU HEALTH SERVICES &nbsp; ' + cb(false) + ' OTHER: ' + blank(null, 80) + '<br>' +
             cb(false) + ' EMS &nbsp; ' + cb(false) + ' POV TO ER &nbsp; ' + cb(false) + ' POV TO URGENT CARE' +
           '</div>' +
-          '<div style="margin:6px 0;">' + cb(!!(refusalSlots.identity && refusalSlots.tools)) +
+          // Stage 3: was `refusalSlots.identity && refusalSlots.tools` (both
+          // legacy slots). The "patient verbalizes understanding" line now
+          // maps cleanly to the new `understanding` concept slot.
+          '<div style="margin:6px 0;">' + cb(!!refusalSlots.understanding) +
             ' <b>PATIENT OR PARENT/GUARDIAN VERBALIZES UNDERSTANDING OF RISKS AND CLINICAL SITUATION</b></div>' +
         '</div>' +
       '</div>' +
@@ -15756,44 +16703,74 @@ function pkmProviderSpriteSVG(role) {
 // Names are picked deterministically per call so the same patient always
 // gets the same nickname (uses the dispatch object as the seed).
 const PKM_FUNNY_NAMES = {
+  // Stage 3 fix: every pool needs at least a few female names so a dispatch
+  // tagged "F" (e.g. "20yo F panic attack") doesn't fall through to the
+  // unfiltered all-male pool. cardiac/tox/trauma were entirely male before
+  // this pass — that\u2019s why "20yo F panic attack" was getting named
+  // "Tight-Chest Tony." Each pool now ships ~50/50 male/female with a few
+  // unisex names sprinkled in.
   shock:   ['Bee-Sting Bobby', 'Swollen Steve', 'Anaphy-Lexi', 'Hive-Five Hank',
-            'Wheezy Wendy McSwell', 'Puffy Pete', 'Throat-Tight Tina', 'Cantaloupe Cara'],
+            'Wheezy Wendy McSwell', 'Puffy Pete', 'Throat-Tight Tina', 'Cantaloupe Cara',
+            'Bee-Sting Beatrice', 'Hive-Five Hannah', 'Puffy Patty', 'Allergic Allie'],
   tox:     ['Sleepy Steve', 'Nodding Nate', 'Pinpoint Pete', 'Foggy Frank',
-            'Dreamy Dwight', 'K.O. Kyle', 'Snore-Lax Sam', 'Couch-Lock Carl'],
+            'Dreamy Dwight', 'K.O. Kyle', 'Snore-Lax Sam', 'Couch-Lock Carl',
+            'Sleepy Sue', 'Nodding Nora', 'Foggy Frances', 'Dreamy Daisy',
+            'Pinpoint Patty', 'Couch-Lock Cara'],
   trauma:  ['Stray-Bullet Bob', 'Wrong-Place Walter', 'Range-Day Randy',
             'Lucky Luke', 'Bumper-Cars Brian', 'Glass-Half-Empty Greg',
-            'Fender-Bender Fred', 'Tumbleweed Tim', 'Slip-and-Slide Sal'],
+            'Fender-Bender Fred', 'Tumbleweed Tim', 'Slip-and-Slide Sal',
+            'Wrong-Place Wendy', 'Bumper-Cars Bea', 'Fender-Bender Fran',
+            'Slip-and-Slide Sally', 'Glass-Half-Empty Greta', 'Tumbleweed Tara',
+            'Lucky Lucy', 'Stray-Bullet Beatrice'],
   cardiac: ['Squeeze Sam', 'Pressure Pete', 'Crusher Carl', 'Tight-Chest Tony',
             'Sweat-Through Stan', 'Old-Ticker Ted', 'Heartbreak Henry',
-            'Elephant-On-Chest Eddie'],
+            'Elephant-On-Chest Eddie',
+            'Squeeze Sue', 'Tight-Chest Tina', 'Sweat-Through Stella',
+            'Old-Ticker Tess', 'Heartbreak Helen', 'Pressure Patty',
+            'Crusher Carla', 'Elephant-On-Chest Edie'],
   resp:    ['Wheezy Wendy', 'Inhaler Inez', 'Tight-Chest Terry', 'Pursed-Lip Pete',
-            'Tripod Tom', 'Air-Hungry Hank', 'Three-Word Theresa', 'Whistler Will'],
+            'Tripod Tom', 'Air-Hungry Hank', 'Three-Word Theresa', 'Whistler Will',
+            'Tripod Tara', 'Air-Hungry Hannah', 'Pursed-Lip Patty', 'Whistler Wanda'],
   burns:   ['Crispy Chris', 'Toasty Tim', 'Hot-Stuff Hannah', 'BBQ Bobby',
-            'Charcoal Charlie', 'Ouch-Ouch Olivia'],
+            'Charcoal Charlie', 'Ouch-Ouch Olivia',
+            'Toasty Tina', 'BBQ Bea', 'Crispy Carla'],
   neuro:   ['Droopy Doug', 'Lopsided Larry', 'Sugar-Crash Sue', 'Low-Carb Larry',
-            'Glucose Greg', 'Foggy Florence', 'Stroker McSweat', 'Shaky Shauna'],
+            'Glucose Greg', 'Foggy Florence', 'Stroker McSweat', 'Shaky Shauna',
+            'Droopy Dolores', 'Lopsided Linda', 'Glucose Greta', 'Shaky Sharon'],
   psych:   ['Anxious Annie', 'Worried Walter', 'Voices Vanessa',
-            'Restless Rick', 'Spiraling Sandra', 'Off-Day Oscar'],
+            'Restless Rick', 'Spiraling Sandra', 'Off-Day Oscar',
+            'Anxious Anna', 'Worried Wendy', 'Restless Ruth', 'Spiraling Sue'],
   campus:  ['Frat-House Frank', 'Finals-Week Fiona', 'Tequila Trevor',
-            'Energy-Drink Ethan', 'No-Sleep Naomi'],
+            'Energy-Drink Ethan', 'No-Sleep Naomi',
+            'Tequila Tara', 'Energy-Drink Edie', 'Frat-House Fran',
+            'Finals-Week Felix'],
   ob:      ['Ten-Months Tara', 'Pop-Soon Patty', 'Push-Now Penny',
             'Crowning Cara', 'Contractions Carol', 'Postpartum Pearl',
             'Late-Term Linda', 'Hemorrhage Hannah', 'First-Time Frances'],
-  peds:    ['Tiny Timmy', 'Squirmy Sam', 'Lego-Up-The-Nose Lily'],
+  peds:    ['Tiny Timmy', 'Squirmy Sam', 'Lego-Up-The-Nose Lily',
+            'Tiny Tina', 'Squirmy Sue', 'Bouncy Bea'],
   medical: ['Vague Vicky', 'Just-Off Jim', 'Doesn\u2019t-Feel-Right Doris',
-            'Maybe-Something Margaret', 'Generally-Bad Gary', 'Off-The-Couch Otis'],
+            'Maybe-Something Margaret', 'Generally-Bad Gary', 'Off-The-Couch Otis',
+            'Just-Off Jane', 'Generally-Bad Greta', 'Off-The-Couch Olive'],
 };
 // Stage 2.8 QOL: gender lookup so the funny-name picker matches the
 // patient's inferred sex. Built off the LAST whitespace-separated token
 // of each name (e.g. "Wrong-Place Walter" → "Walter"). Names not in
 // either set are treated as unisex (rendered to either gender).
 const _PKM_NAME_FIRST_F = new Set([
+  // Stage 3: female set expanded to cover every female name now in the
+  // pools above. Without these entries, _pkmInferNameGender would return
+  // null and they'd slot anywhere — defeating the female-filter.
   'Wendy','Lexi','Tina','Cara','Tara','Patty','Penny','Lily','Inez','Theresa',
   'Hannah','Vicky','Doris','Margaret','Naomi','Wanda','Lainey','Nora','Diane',
   'Edna','Mabel','Hilda','Carol','Brenda','Lena','Clara','Greta','Ruth',
   'Beverly','Joyce','Sharon','Pearl','Linda','Rita','Iris','Rose','Olive',
   'Daisy','Gail','Helen','Alice','Esther','Gladys','Frances','Eunice',
   'Phyllis','Agnes','Ethel','Bernice','Dolores','Loretta','Mildred',
+  // Stage 3 additions:
+  'Sue','Stella','Tess','Carla','Edie','Allie','Bea','Beatrice','Sally',
+  'Lucy','Fran','Anna','Jane','Olivia','Fiona','Florence','Sandra','Annie',
+  'Shauna',
 ]);
 const _PKM_NAME_FIRST_M = new Set([
   'Bob','Bobby','Steve','Hank','Pete','Frank','Dwight','Kyle','Sam','Carl',
@@ -16088,6 +17065,12 @@ function pkmDoDisposition(kind) {
 // decay messages so the narration doesn't repeat.
 function pkmApplyDecay() {
   if (!game.pkm || !game.pkm.profile) return false;
+  // Stage 3: scene-phase suppression. While the player is still doing
+  // scene size-up, the patient hasn't been "approached" yet — decay
+  // narration ("Bleeding continues to soak through the dressing.") would
+  // spoil MOI/NOI assessment. Decay stays paused until the first
+  // patient-contact action (anything outside the SCENE category).
+  if (game.pkm._sceneOnly) return false;
   const profile = game.pkm.profile;
   if (!profile.decayPerTurn || profile.decayPerTurn <= 0) return false;
   // If any stabilizer has been delivered, decay stops.
@@ -16675,6 +17658,14 @@ function _s4aRenderFlagsBucket(flags, headerLabel, headerColor, bgRgba, borderCo
   if (!Array.isArray(flags) || !flags.length) return '';
   const items = flags.map(f => {
     if (!f) return '';
+    // Stage 3 fix: bucket items can be either structured flag objects
+    // ({label, message, correctiveAction}) or plain-string tips (from
+    // _buildNextTimeTips). Strings render as a clean full-sentence bullet
+    // \u2014 no awkward "Item." placeholder, no faux bold-label.
+    if (typeof f === 'string') {
+      return '<li style="margin-bottom:6px; color:#f4f1de;">' +
+             _s4aEscape(f) + '</li>';
+    }
     let html = '<li style="margin-bottom:6px;">';
     html += '<span style="font-weight:700; color:' + headerColor + ';">' +
             _s4aEscape(f.label || 'Item') + '.</span>';
@@ -16736,6 +17727,137 @@ function _s4aRenderRoleNote() {
     '<b style="color:#ffd166;">' + role + ' note: </b>' + _s4aEscape(pearl) + '</div>';
 }
 
+// Stage 3: action-oriented improvement plan generated from the debrief
+// flags + the in-flight encounter state. Pulls from missed critical
+// actions, critical failures, scope errors, reassessment misses, and
+// disposition specifics so the player gets a short list of concrete
+// next-steps instead of an abstract list of mistakes. Returns an array
+// of { label, message } objects so the existing _s4aRenderFlagsBucket
+// renderer (which expects flag objects, not strings) prints each tip as
+// a short bold headline + supporting one-liner.
+function _buildNextTimeTips(flags) {
+  const tips = [];
+  const seen = new Set();
+  const push = (code, label, message) => {
+    if (!label || seen.has(code)) return;
+    seen.add(code);
+    tips.push({ label: label, message: message || '' });
+  };
+  flags = flags || {};
+  const cp = (game.pkm && game.pkm.clinicalProgress) || {};
+  const tags = (game.pkm && game.pkm.callTags) || [];
+  const has = (k) => tags.indexOf(k) !== -1;
+  const dispatch = (game.pkm && game.pkm.dispatch) ||
+                   (game.destination && game.destination.dispatch) || {};
+  const dtext = ((dispatch.title || '') + ' ' + (dispatch.desc || '')).toLowerCase();
+
+  // ---- Reassessment misses ----
+  if (cp.interventionDone && !cp.reassessmentDone) {
+    push('reassess',
+      'Reassess after every treatment',
+      'Repeat vitals + symptom check after every intervention \u2014 reassessment trends drive your disposition.');
+  }
+
+  // ---- Missing ABCs in unstable patients ----
+  const isUnstable = /E0|E1|PRIORITY 1|PRIORITY 2/i.test(
+    (dispatch.erating || '') + ' ' + (dispatch.priority || ''));
+  if (isUnstable && !(cp.airwayAssessed && cp.breathingAssessed && cp.circulationAssessed)) {
+    push('abc',
+      'ABCs before a long history on unstable patients',
+      'Airway, breathing, and circulation get found and fixed before a long SAMPLE / OPQRST interview.');
+  }
+
+  // ---- Missing SAMPLE / OPQRST ----
+  if (!cp.sampleStarted) {
+    push('sample',
+      'Ask SAMPLE before refusal or handoff',
+      'PMHx, allergies, medications, and last oral intake need to be documented \u2014 SAMPLE is the easiest way to get there.');
+  }
+  if (!cp.opqrstStarted && (has('cardiac') || has('trauma') || has('resp') || /pain/.test(dtext))) {
+    push('opqrst',
+      'Run OPQRST on every pain or symptom complaint',
+      'Onset, provocation, quality, radiation, severity, and timing build the clinical picture.');
+  }
+
+  // ---- Refusal-specific ----
+  const chatProgress = (typeof chatState !== 'undefined' && chatState && chatState.patientProgress) || {};
+  const refusalTouched = !!(chatProgress.recommendation || chatProgress.risks);
+  const wasRefusal = refusalTouched ||
+    (game.pkm && game.pkm.lastDisposition &&
+     /refusal/i.test(String(game.pkm.lastDisposition.kind || '')));
+  if (wasRefusal) {
+    if (typeof patientRefusalIsHighRisk === 'function' && patientRefusalIsHighRisk() &&
+        !chatProgress.medicalCommand) {
+      push('hi_risk_command',
+        'High-risk refusals need medical command',
+        'Chest pain, SOB, syncope, head injury, AMS, abnormal vitals, suicidal ideation \u2014 patch to med control before clearing.');
+    }
+    if (!chatProgress.understanding) {
+      push('teach_back',
+        'Confirm understanding with teach-back',
+        'Have the patient tell you back what could happen \u2014 that\u2019s how you document informed refusal.');
+    }
+    if (!chatProgress.returnPrecautions) {
+      push('return_precautions',
+        'Always give return precautions',
+        '\u201cCall 911 or go to the ER if symptoms return or worsen\u201d \u2014 say it, document it.');
+    }
+  }
+
+  // ---- ALS handoff ----
+  if (cp.medicHandoffGiven && !(cp.vitalsObtained && cp.sampleStarted)) {
+    push('als_handoff',
+      'Structure your ALS handoff',
+      'Age / sex \u2192 chief complaint \u2192 findings \u2192 vitals \u2192 treatments \u2192 response \u2192 reason for ALS.');
+  }
+
+  // ---- Specialty hospital routing ----
+  if (has('neuro') && /stroke|cva|tia/.test(dtext)) {
+    push('stroke_center',
+      'Suspected stroke needs a stroke-capable hospital',
+      'Last-known-well, glucose if in scope, minimize scene time, transport to a stroke center.');
+  }
+  if (has('cardiac') && /chest|stemi|mi/.test(dtext)) {
+    push('stemi_center',
+      'Suspected STEMI needs a PCI center',
+      'Early 12-lead if in scope, ASA when appropriate, alert receiving early, route to a STEMI-capable hospital.');
+  }
+  if (has('trauma') && /major|severe|gsw|stab|mvc|fall/.test(dtext)) {
+    push('trauma_center',
+      'Major trauma: hemorrhage first, then transport center',
+      'Control bleeding before ABCs/secondary, then route to a trauma center if criteria are met.');
+  }
+  if (has('peds') || /pediatric|child|infant/.test(dtext)) {
+    push('peds_center',
+      'Pediatric patients need pediatric-capable resources',
+      'Pediatric-sized equipment, weight-based dosing, route to a pediatric-capable receiving facility.');
+  }
+  if (has('burns')) {
+    push('burn_center',
+      'Significant burns route to a burn center',
+      'Brief cooling, dry covering, pain control, transport to a burn center for serious / circumferential / airway / >10% TBSA burns.');
+  }
+
+  // ---- Contraindications / scope errors ----
+  if ((flags.medicationErrors || []).length || (flags.scopeErrors || []).length) {
+    push('contraindications',
+      'Check contraindications and stay in scope',
+      'BP before NTG, airway protection before CPAP, scope before action \u2014 request ALS or medical command when the patient needs more.');
+  }
+
+  // ---- Positive coaching for clean runs ----
+  if (tips.length === 0) {
+    push('positive_reassess',
+      'Keep using reassessment trends',
+      'The difference between a save and a near-miss is usually in the second set of vitals \u2014 keep documenting them.');
+    push('positive_routine',
+      'Repeat the routine on every call',
+      'SAMPLE + OPQRST + vitals + reassessment, every time. That\u2019s how the documentation tells the story.');
+  }
+
+  return tips.slice(0, 5);
+}
+
 // --- The main builder ------------------------------------------------
 // outcomeType: 'saved' | 'died' | 'wrong_hospital' | 'over_triage' |
 //              'refusal_correct' | 'refusal_under' | 'als_handoff'
@@ -16783,6 +17905,17 @@ function pkmBuildStructuredDebrief(outcomeType, resultMsg, cfBlock, coachBlock) 
     out += _s4aRenderFlagsBucket(flags.positives || [],
       'What you did well', '#06d6a0',
       'rgba(6,214,160,0.08)', '#06d6a0');
+    // Stage 3: action-oriented "what to do next time" coaching block,
+    // generated from the same flag/disposition data as the rest of the
+    // debrief. Reads as a short improvement plan, not a list of mistakes.
+    try {
+      const tips = _buildNextTimeTips(flags);
+      if (tips && tips.length) {
+        out += _s4aRenderFlagsBucket(tips,
+          'What to do next time', '#5fa8d3',
+          'rgba(95,168,211,0.08)', '#5fa8d3');
+      }
+    } catch (_eNt) {}
     // 8. Sequence review (visual checklist).
     out += _s4aRenderSequenceReview();
     // 9. Role-specific pearl.
@@ -16886,6 +18019,27 @@ const DEBRIEF_TEACHING = {
 // tutorials (if exposed) or via localStorage.
 const WALKTHROUGH_STORAGE_KEY_COMPLETED = 'emsq_walkthrough_completed_v1';
 const WALKTHROUGH_STORAGE_KEY_SKIPPED   = 'emsq_walkthrough_skipped_v1';
+// Stage 3: title-screen "Walkthrough on first call" checkbox. The toggle's
+// value persists here so the choice survives reloads. Three values:
+//   '1' — checked: show the walkthrough on the upcoming shift's first call.
+//   '0' — unchecked: the player opted out (or already used it once).
+//   null — never set: treat as '1' (default on for new players).
+// The toggle auto-flips to '0' after a shift that actually delivered the
+// walkthrough on a call, so it acts as "give me a hand the first time and
+// then leave me alone."
+const WALKTHROUGH_TOGGLE_STORAGE_KEY = 'emsq_walkthrough_first_call_toggle_v1';
+function _walkthroughFirstCallEnabled() {
+  try {
+    const v = localStorage.getItem(WALKTHROUGH_TOGGLE_STORAGE_KEY);
+    if (v === null) return true;   // default on
+    return v === '1';
+  } catch (_e) { return true; }
+}
+function _setWalkthroughFirstCallEnabled(on) {
+  try {
+    localStorage.setItem(WALKTHROUGH_TOGGLE_STORAGE_KEY, on ? '1' : '0');
+  } catch (_e) {}
+}
 
 function _walkthroughPermanentlyDisabled() {
   try {
@@ -16915,73 +18069,48 @@ function buildWalkthroughStepsForScenario(dispatch, role) {
   const dispoLabel = isCEMS ? 'ALS handoff or treat / release' : 'Transport or refusal decision';
 
   const all = [
+    // Stage 3 (restored): walkthrough starts BEFORE the player approaches
+    // the patient \u2014 covers the full call loop generically, not
+    // call-type-specific clinical steps. The earlier 7-step ASSESS-onward
+    // pass cut too much; the player needs the basic flow (read dispatch,
+    // drive, approach, scene, assess, treat, transport, clear, debrief)
+    // even more than the clinical detail.
     { id: 'dispatch_read', title: 'Read dispatch',
-      body: 'Start by reading the dispatch above the action menu. It tells you where you are, what was reported, and how serious it might be.',
+      body: 'A new call just dropped. Read the dispatch card at the top of the screen \u2014 it tells you the patient, location, and priority (E0-E4) so you know how urgent it is. You can also acknowledge dispatch on the radio (press T) if you want, but it\u2019s not required.',
       required: 'auto' },
-    { id: 'bsi_ppe', title: 'BSI / PPE',
-      body: 'Before touching anyone, protect yourself. Open ASSESS and pick "BSI / PPE" — gloves and eye protection at minimum, mask when there is splash risk.',
-      required: 'flag:bsiPpe' },
-    { id: 'scene_safety', title: 'Scene safety',
-      body: 'Now check the scene. From ASSESS pick "Scene safety check". Look for traffic, weapons, crowds, vomit, blood, needles, chemicals, animals, electrical hazards.',
-      required: 'flag:sceneSafety' },
-    { id: 'moi_noi', title: 'MOI / NOI',
-      body: 'From ASSESS pick "MOI / NOI". Is this illness or injury? What is the mechanism or nature of the complaint? Shapes the assessment that follows.',
-      required: 'flag:moiNoi' },
-    { id: 'patient_count_resources', title: 'Patient count / resources',
-      body: 'From ASSESS pick "Patient count / call for resources". How many patients? Do you need ALS, ambulance, fire, police, hazmat, or public safety?',
-      required: 'flag:patientCountResources' },
-    { id: 'general_impression', title: 'General impression',
-      body: 'Open ASSESS and pick "General impression". Does the patient look sick, injured, unstable, or mostly okay? This sets the pace of the call.',
-      required: 'flag:generalImpression' },
-    { id: 'loc', title: 'Responsiveness / AVPU',
-      body: 'From ASSESS, pick "AVPU / mental status". Alert, responds to Voice, responds to Pain, or Unresponsive. This is the L in ABCs.',
-      required: 'flag:loc' },
-    { id: 'airway', title: 'Airway',
-      body: 'Airway comes first. Vomit, snoring, swelling, trauma, obstruction? You can address airway via TREAT (suction, OPA / NPA, BVM) — the menus credit airway when you act on it.',
-      required: 'flag:airwayAssessed' },
-    { id: 'breathing', title: 'Breathing',
-      body: 'Now assess breathing. From ASSESS pick "Lung sounds". Rate, depth, work of breathing, lung sounds, and SpO2 if available.',
-      required: 'flag:breathingAssessed' },
-    { id: 'circulation', title: 'Circulation',
-      body: 'From ASSESS pick "Skin signs". Skin signs + pulse + scan for major bleeding. Pale, cool, diaphoretic skin is shock until proven otherwise.',
-      required: 'flag:circulationAssessed' },
-    { id: 'resources', title: 'Call resources',
-      body: isCEMS
-        ? 'CEMS is non-transport. For anything unstable, request ambulance / ALS early. From TREAT pick "Call ALS" (when available) or use RADIO > Dispatch.'
-        : 'If the patient is unstable or beyond your unit, call ALS / ambulance early. Time-to-ALS is one of the highest-leverage things a BLS unit controls.',
-      required: 'flag:alsRequested',
-      skipIf: function () {
-        return !isUnstable;
-      } },
-    { id: 'dispatch_talk', title: 'Talk to dispatch',
-      body: 'Open the chat panel (T or the radio button). Sending dispatch a status update or resource request is good practice on most calls.',
+    { id: 'drive_to_scene', title: 'Drive to the scene',
+      body: 'Get in the rig and drive to the scene marker on the minimap. W / S to accelerate / brake, A / D to turn. Press L to toggle lights & sirens on \u2014 use them on E0 / E1 priority calls (traffic yields to you and you don\u2019t lose time). Don\u2019t crash; rig HP matters.',
+      required: 'auto' },
+    { id: 'approach_patient', title: 'Approach the patient',
+      body: 'Park near the scene marker. Press E to get out of the rig, then walk to the patient. Press E again when you\u2019re next to them to begin the encounter. Bring the stretcher (right next to the back of the rig) if you think you\u2019ll be transporting.',
+      required: 'auto' },
+    { id: 'scene_size_up', title: 'Scene size-up',
+      body: 'Every call starts in the SCENE menu. Work through the four scene actions \u2014 BSI/PPE, scene safety, MOI/NOI, patient count/resources \u2014 then click CONTINUE ONTO SCENE to begin the clinical phase. Each one returns useful info based on the call type.',
+      required: 'flag:bsiPpe_or_sceneSafety_or_moiNoi_or_patientCountResources' },
+    { id: 'assess_patient', title: 'Assess the patient',
+      body: 'Use ASSESS to evaluate the patient (mental status, vitals, lung sounds, skin, focused exam) and TALK to gather history (SAMPLE / OPQRST). Pick whatever\u2019s relevant for the chief complaint \u2014 you don\u2019t need every option, just the right ones.',
+      required: 'flag:vitalsObtained_or_loc_or_generalImpression_or_opqrstStarted_or_sampleStarted' },
+    { id: 'treat_patient', title: 'Treat the patient',
+      body: 'Use TREAT to give care. The right intervention depends on what your assessment found \u2014 oxygen for hypoxia, ASA for chest pain, glucose for hypoglycemia, splint for fractures, etc. The patient\u2019s HP bar moves with each treatment so you can see if you\u2019re helping.',
+      required: 'flag:interventionDone' },
+    { id: 'transport_disposition', title: 'Transport to finish the encounter',
+      body: 'When you\u2019re ready to wrap up, open the TRANSPORT menu. Four options: transport to a hospital, hand off to ALS (paramedic-level care), refuse transport (with the refusal speech), or treat & release on scene (CEMS only). Picking any one of these closes the encounter.',
+      required: 'flag:transportPriorityDecided' },
+    { id: 'clear_scene_radio', title: 'Clear scene on the radio',
+      body:
+        'Once the call is done, tell dispatch you\u2019re clear. Open chat (T or the radio button) and use the DISPATCH tab.\n\n' +
+        'Script:\n' +
+        '\u2022 "[Station] from EMS" \u2014 e.g. "Dispatch from CEMS 1." Wait for them to acknowledge.\n' +
+        '\u2022 Then: "You can show us clear of scene," followed by your disposition.\n\n' +
+        'Examples by disposition:\n' +
+        '\u2022 Transport: "Clear of scene, transporting one patient to [hospital], ETA [X] minutes."\n' +
+        '\u2022 ALS handoff: "Clear of scene, ALS [Medic XX] has taken over patient care. Returning to service."\n' +
+        '\u2022 Refusal: "Clear of scene, patient refused transport. Refusal documented. Returning to service."\n' +
+        '\u2022 Treat & release (CEMS): "Clear of scene, treated and released on scene. Returning to service."',
       required: 'comm:dispatch',
       optional: true },
-    { id: 'history', title: 'OPQRST / SAMPLE',
-      body: 'Once life threats are addressed, open TALK and ask OPQRST for the complaint and SAMPLE for medical history. Bystanders can help if the patient cannot.',
-      required: 'flag:opqrstStarted_or_sampleStarted' },
-    { id: 'vitals', title: 'Baseline vitals',
-      body: 'From ASSESS pick "Full vitals". Pulse, respirations, blood pressure, oxygen saturation, skin signs. These set the trend the receiving facility will track.',
-      required: 'flag:vitalsObtained' },
-    { id: 'focused_exam', title: 'Focused exam',
-      body: 'Focus on the body system involved: lungs for breathing problems, stroke screen for neuro, rapid trauma for MVCs, skin / perfusion for shock.',
-      required: 'flag:focusedExamDone' },
-    { id: 'treatment', title: 'Treat within scope',
-      body: 'Open TREAT and pick a treatment in your role and appropriate for the patient. Good care is not just doing something — it is doing the right thing, in the right order, for the right reason.',
-      required: 'flag:interventionDone' },
-    { id: 'reassessment', title: 'Reassess after every treatment',
-      body: 'After every treatment, reassess. Did breathing improve? Did perfusion improve? Did mental status improve? Pick a reassessment action from TREAT or repeat ASSESS items.',
-      required: 'flag:reassessmentDone' },
-    { id: 'disposition', title: dispoLabel,
-      body: isCEMS
-        ? 'Decide the disposition: hand off to the arriving ambulance / ALS, or treat-and-release if (and only if) the patient is truly stable and competent.'
-        : 'Decide the disposition: rapid transport, routine transport, ALS handoff, or treat-and-release if truly safe. From TREAT pick the disposition option.',
-      required: 'flag:transportPriorityDecided' },
-    { id: 'handoff', title: 'Handoff / report',
-      body: 'Finish with a clean handoff: age / sex, chief complaint, what happened, ABC findings, vitals / trends, treatments, response, and what you need next.',
-      required: 'flag:handoffGiven_or_medicHandoffGiven' },
     { id: 'debrief', title: 'Read your debrief',
-      body: 'After the call closes, read the debrief. It shows what you did well, what you missed, any critical failures, and the key teaching pearl for the call type. The clinical score is separate from your shift score.',
+      body: 'After the call closes, read the debrief screen. It tells you what you did well, what you missed, and any critical failures \u2014 use it to learn what to do differently next time. Hit CONTINUE when you\u2019re ready for the next call.',
       required: 'auto' },
   ];
 
@@ -17009,14 +18138,29 @@ function initWalkthroughForShift() {
 
 function initFirstCallWalkthroughIfNeeded(dispatch) {
   if (!game.walkthrough) initWalkthroughForShift();
-  if (!game.walkthrough.shiftEligible) return;
   if (game.walkthrough.firstCallSeen) return;
+  // Stage 3 (clarified): the title-screen "Walkthrough on first call" toggle
+  // is the SINGLE gate. Checked \u2192 fires on the first call of the shift,
+  // every time. The legacy permanent-disable flags (COMPLETED / SKIPPED in
+  // localStorage) are intentionally NOT consulted here \u2014 if the player
+  // re-checks the box after completing or skipping a previous walkthrough,
+  // they\u2019re asking for another one and they should get it. The toggle
+  // itself auto-unchecks at the end of this function so a player only gets
+  // one walkthrough per explicit opt-in.
+  if (!_walkthroughFirstCallEnabled()) {
+    game.walkthrough.firstCallSeen = true;
+    return;
+  }
   game.walkthrough.firstCallSeen = true;
   const role = (game.role || 'EMT').toUpperCase();
   game.walkthrough.steps = buildWalkthroughStepsForScenario(dispatch, role);
   game.walkthrough.currentStepIndex = 0;
   game.walkthrough.active = true;
   game.walkthrough.callId = (dispatch && dispatch.title) || '(unknown)';
+  // Uncheck the title-screen toggle now that the walkthrough is running on
+  // this call. Player has to explicitly re-check the box on the title
+  // screen to get another walkthrough.
+  _setWalkthroughFirstCallEnabled(false);
   showWalkthroughStep();
 }
 
@@ -17042,12 +18186,19 @@ function showWalkthroughStep() {
   if (tEl) tEl.textContent = step.title || '';
   if (bEl) bEl.textContent = step.body || '';
 
-  // Show the GOT IT button for auto steps and optional steps.
+  // Stage 3: per user feedback, every step has a GOT IT button \u2014
+  // never the case that a flag fails to fire and the player is stuck.
+  // Auto / optional steps just advance on click; flag / comm steps also
+  // advance, with the label changed to "GOT IT \u2014 SKIP STEP" so the
+  // player knows they're bypassing the action gate.
   const isAuto = (step.required === 'auto');
   const isOptional = !!step.optional;
+  const isActionGated = !isAuto && !isOptional;
   if (nBtn) {
-    nBtn.style.display = (isAuto || isOptional) ? '' : 'none';
-    nBtn.textContent = isAuto ? 'GOT IT' : (isOptional ? 'SKIP THIS ONE' : 'GOT IT');
+    nBtn.style.display = '';
+    nBtn.textContent = isAuto       ? 'GOT IT'
+                     : isOptional   ? 'SKIP THIS ONE'
+                     : 'GOT IT \u2014 SKIP STEP';
   }
 
   // Required-action hint
@@ -17467,13 +18618,23 @@ function pkmBuildDocumentation() {
   const suicidalConcern = /suicid|self[\s-]?harm|psych|behav/i.test(dt);
 
   // Refusal-speech progress (CEMS treat-and-release flow).
+  // Stage 3: progress slots are now concept-based. Map them to the legacy
+  // local variable names this documentation builder downstream still uses,
+  // so the rest of the function (refusal-form documentation, debrief
+  // flags) keeps working unchanged. Bonus credit (legacy identity/tools)
+  // comes from chatState.patientBonus now.
   const rp = (typeof chatState !== 'undefined' && chatState && chatState.patientProgress)
     ? chatState.patientProgress : {};
+  const rb = (typeof chatState !== 'undefined' && chatState && chatState.patientBonus)
+    ? chatState.patientBonus : {};
   const refusalRisksExplained = !!rp.risks;
-  const refusalAdviceGiven = !!rp.advice;
-  const refusalIdentityCovered = !!rp.identity;
-  const refusalAmaCovered = !!rp.ama;
-  const refusalToolsCovered = !!rp.tools;
+  // advice covered = the player gave return precautions OR documented.
+  const refusalAdviceGiven = !!(rp.returnPrecautions || rp.documentation);
+  // identity / tools coverage now comes from the bonus map.
+  const refusalIdentityCovered = !!rb.emsNotDoctor;
+  const refusalToolsCovered    = !!rb.limitedTools;
+  // AMA framing: documentation slot catches AMA / refusal language too.
+  const refusalAmaCovered      = !!rp.documentation;
 
   // ALS handoff data.
   const medicHandoffGiven = !!cp.medicHandoffGiven;
@@ -18078,6 +19239,114 @@ function _wireGameWalkthroughOnce() {
     close._wired = true;
     close.addEventListener('click', _skipGameWalkthrough);
   }
+  // Stage 3: wire the title-screen "Walkthrough on first call" toggle.
+  // Initial state mirrors localStorage; user changes persist instantly.
+  // The toggle is auto-flipped off in initFirstCallWalkthroughIfNeeded
+  // once the walkthrough actually runs on a call.
+  try {
+    const wtCb = document.getElementById('title-walkthrough-cb');
+    if (wtCb && !wtCb._wired) {
+      wtCb._wired = true;
+      wtCb.checked = _walkthroughFirstCallEnabled();
+      wtCb.addEventListener('change', () => {
+        _setWalkthroughFirstCallEnabled(!!wtCb.checked);
+      });
+    }
+  } catch (_eWtToggle) {}
+  // Stage 3: make both walkthrough bubbles draggable. The encounter
+  // walkthrough sits over the encounter UI and the game-mechanic
+  // walkthrough lives bottom-right of the viewport — both can cover
+  // the actions the player is trying to take, so users need to be
+  // able to move them. Dragging the bubble overrides its CSS pinning
+  // (right/bottom) by switching to top/left positioning, clamped
+  // inside the viewport.
+  _makeWalkthroughDraggable('game-walkthrough', 'emsq_gw_pos_v1');
+  _makeWalkthroughDraggable('enc-walkthrough',  'emsq_ew_pos_v1');
+}
+function _makeWalkthroughDraggable(elementId, storageKey) {
+  const el = document.getElementById(elementId);
+  if (!el || el._dragWired) return;
+  el._dragWired = true;
+  // Visual affordance: title-bar style cursor + small "drag" hint.
+  el.style.cursor = 'move';
+  el.style.userSelect = 'none';
+  // Restore saved position if any.
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (raw) {
+      const pos = JSON.parse(raw);
+      if (pos && typeof pos.left === 'number' && typeof pos.top === 'number') {
+        el.style.left = pos.left + 'px';
+        el.style.top  = pos.top  + 'px';
+        el.style.right = 'auto';
+        el.style.bottom = 'auto';
+      }
+    }
+  } catch (_eDP) {}
+  let dragging = false;
+  let startX = 0, startY = 0, baseLeft = 0, baseTop = 0;
+  const onDown = (e) => {
+    // Ignore drags that start on form controls inside the bubble
+    // (skip button, close X, checkbox, etc.) so they still work.
+    const t = e.target;
+    if (t && (t.tagName === 'BUTTON' || t.tagName === 'INPUT' ||
+              t.tagName === 'LABEL' || t.tagName === 'A')) return;
+    dragging = true;
+    const rect = el.getBoundingClientRect();
+    // Lock the bubble into top/left so right/bottom CSS rules stop
+    // fighting the drag math.
+    el.style.left = rect.left + 'px';
+    el.style.top  = rect.top  + 'px';
+    el.style.right = 'auto';
+    el.style.bottom = 'auto';
+    baseLeft = rect.left;
+    baseTop  = rect.top;
+    const point = (e.touches && e.touches[0]) || e;
+    startX = point.clientX;
+    startY = point.clientY;
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend',  onUp);
+    e.preventDefault();
+  };
+  const onMove = (e) => {
+    if (!dragging) return;
+    const point = (e.touches && e.touches[0]) || e;
+    let nx = baseLeft + (point.clientX - startX);
+    let ny = baseTop  + (point.clientY - startY);
+    // Clamp inside the viewport with a small margin so the bubble
+    // can't be dragged completely off-screen.
+    const margin = 6;
+    const w = el.offsetWidth || 320;
+    const h = el.offsetHeight || 120;
+    const maxX = window.innerWidth  - w - margin;
+    const maxY = window.innerHeight - h - margin;
+    if (nx < margin) nx = margin;
+    if (ny < margin) ny = margin;
+    if (nx > maxX)   nx = maxX;
+    if (ny > maxY)   ny = maxY;
+    el.style.left = nx + 'px';
+    el.style.top  = ny + 'px';
+    if (e.preventDefault) e.preventDefault();
+  };
+  const onUp = () => {
+    if (!dragging) return;
+    dragging = false;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup',   onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend',  onUp);
+    // Persist last-known position so the player doesn't have to drag
+    // it out of the way every call.
+    try {
+      const rect = el.getBoundingClientRect();
+      localStorage.setItem(storageKey,
+        JSON.stringify({ left: Math.round(rect.left), top: Math.round(rect.top) }));
+    } catch (_eDP2) {}
+  };
+  el.addEventListener('mousedown', onDown);
+  el.addEventListener('touchstart', onDown, { passive: false });
 }
 try {
   if (document.readyState === 'loading') {
@@ -19608,7 +20877,7 @@ const CEMS_SCENARIOS = [
     criticalActions: 'Mention life threats, treatment response, red flags, and what changed.',
     alsTriggers: 'N/A; this occurs when ALS/ambulance arrives.',
     commonMistakes: 'No reassessment vitals. Omitting treatment. Omitting last-known-well/ingestion time/allergen/exposure.',
-    deviationBranches: 'A: Respiratory handoff. B: Trauma handoff. C: Intoxication/AMS handoff. SECTION 4 — QUICK IMPLEMENTATION MAP FOR CEMS ENCOUNTERS Suggested encounter categories and weights for collegiate CEMS: - Respiratory: 25% - Alcohol/intoxication/overdose/AMS: 22% - Soft tissue/orthopedic/minor trauma: 20% - Behavioral/psych/safety: 10% - Medical general: 10% - Environmental/lab/exposure: 8% - Cardiac/resuscitation/critical rare: 5% Suggested campus-flavored location generator: - Residence hall room/bathroom/hallway - Dining hall/cafe/event catering table - Gym/intramural field/climbing wall - Library/study room/computer lab - Makerspace/robotics lab/art studio - Chemistry/teaching lab - Outdoor walkway/stairs/bus stop - Club event/party/apartment - Lecture hall/classroom - Staff/faculty office Suggested severity modifiers: - mild: stable ABCs, normal mental status, reassuring vitals, nonurgent but still assessed. - moderate: abnormal vitals, pain/distress, likely ambulance but not crashing. - severe: ABC compromise, shock, AMS, major bleeding, severe respiratory distress, chest pain with diaphoresis, stroke signs, seizure, overdose. - critical: cardiac/respiratory arrest, complete airway obstruction, severe anaphylaxis/shock, major hemorrhage. Suggested dynamic reassessment intervals: - Every 1-2 turns for critical/severe. - Every 2-3 turns for moderate. - After every intervention. - Immediately after any wrong/dangerous action. Suggested patient HP/stability mapping: - 90-100: stable/reassuring. - 70-89: symptomatic but compensating. - 50-69: concerning; needs ambulance/monitoring. - 30-49: unstable, red flags, urgent ALS/transport. - 1-29: peri-arrest/critical. - 0: arrest/death state depending scenario. Suggested treatment effect examples: - Correct early life-threat intervention: +10 to +25 stability and prevents deterioration. - Correct resource request: does not always increase stability, but prevents disposition failure and improves final score. - Correct reassessment: reveals trend, unlocks handoff score, may prevent hidden deterioration. - Wrong sequence in stable patient: -2 to -5. - Wrong sequence in unstable patient: -10 to -25. - Out-of-scope/dangerous action: -25 or critical fail flag. Suggested branching hidden clues: - Bystander reliability: reliable, uncertain, minimizing, intoxicated, absent. - Patient cooperation: cooperative, embarrassed, panicked, intoxicated, combative, unconscious. - Environment: safe, crowded, blood/body fluids, lab hazard, possible violence, weather hazard. - Red flag overlay: head injury, hypoglycemia, co-ingestion, anaphylaxis, shock, abuse/assault, pregnancy, infection, stimulant use. SECTION 5 — SAMPLE CODE-LIKE SCENARIO TEMPLATE Use this as an example object shape for converting any archetype above into actual game data. { id: "CEMS_RESP_ASTHMA_STAIRS", title: "Asthma flare after campus stairs", role: "CEMS", category: ["Respiratory", "Bronchospasm", "CEMS"], locations: ["residence hall stairwell", "gym lobby", "outdoor hill walkway"], dispatch: [ "CEMS requested for a student having trouble breathing near the stairwell.", "RA reports a resident with asthma cannot catch their breath." ], severityBranches: { mild: { startStability: 82, decayPerTurn: 2 }, severe: { startStability: 48, decayPerTurn: 8 } }, mustDoBeforeHistoryIfSevere: ["BSI", "Scene Safety", "Airway", "Breathing", "Circulation", "ALS/Ambulance", "Position", "Oxygen/Assist Inhaler if authorized"], patientResponses: { opqrst: { onset: "It started after I ran up the stairs in the cold.", provocation: "Walking or talking makes it worse.", quality: "My chest feels tight. I can\'t get air out.", radiation: "It doesn\'t really go anywhere.", severity: "Eight out of ten shortness of breath.", time: "About ten minutes." }, sample: { symptoms: "Shortness of breath, chest tightness, wheezing.", allergies: "Seasonal allergies, no medication allergies.", meds: "Albuterol inhaler; I used it twice.", history: "Asthma. I went to the ER once as a kid.", lastIntake: "Lunch a few hours ago.", events: "I rushed here from across campus." } }, vitals: { initialSevere: { bp: "146/90", hr: 136, rr: 34, spo2: 84, skin: "pale, diaphoretic", loc: "Alert but tiring" }, afterCorrectCare: { bp: "138/86", hr: 124, rr: 28, spo2: 93, skin: "less diaphoretic", loc: "Alert, speaking short phrases" }, ifDelayed: { bp: "150/92", hr: 144, rr: 18, spo2: 78, skin: "cyanotic lips", loc: "Confused/exhausted" } }, correctActions: ["Position upright", "Oxygen if available/authorized", "Assist prescribed inhaler if authorized", "Call ALS/ambulance", "Reassess lung sounds and vitals"], criticalFails: ["Treat as panic without respiratory assessment", "Lay patient supine", "No ALS/ambulance in severe branch", "No reassessment after intervention"], handoffMustInclude: ["Known asthma", "trigger", "initial SpO2/RR", "inhaler use before arrival", "CEMS interventions", "response to care"] } END OF FILE',
+    deviationBranches: 'A: Respiratory handoff. B: Trauma handoff. C: Intoxication/AMS handoff.',
     patientDialogue: 'N/A.',
     bystanderDialogue: 'May offer important info at last minute: "They took insulin," "They used EpiPen."',
     scoringHooks: 'Reward concise structured handoff and trend data.',
@@ -20329,7 +21598,7 @@ const EMT_SCENARIOS = [
     reassessmentCurves: '- Age-appropriate back slaps/chest thrusts for infant or abdominal thrusts for child if severe: obstruction relieved. - Blind sweep: airway trauma/worsening. - Unconscious branch: CPR, look in mouth before breaths, ALS.',
     commonMistakes: 'Treating partial obstruction aggressively, blind finger sweeps, panic/no ALS.',
     disposition: 'Transport after severe obstruction or persistent symptoms.',
-    gameTags: ['peds', 'choking', 'airway', 'CPR_transition. IMPLEMENTATION NOTES FOR CLAUDE / GAME ENGINE Suggested object model: scenario = { id', 'level: "EMT"', 'category', 'tags', 'acuity: "low|medium|high|critical"', 'dispatchVariants: []', 'scene: { hazards', 'location', 'bystanders', 'firstImpression', 'hiddenClues }', 'patient: { ageRange', 'genderOptions', 'baselineDialogue', 'anxiousDialogue', 'deterioratingDialogue }', 'questions: { OPQRST', 'SAMPLE', 'bystanderAnswers', 'medicationListClues }', 'findings: { primary', 'focused', 'vitals', 'lungSounds', 'skin', 'pupils', 'PMS', 'glucoseOptional }', 'branches: []', 'correctActions: []', 'criticalActions: []', 'contraindicatedActions: []', 'reassessment: { afterCorrectTreatment', 'afterDelay', 'afterWrongTreatment', 'afterTransportStart }', 'disposition: { transportPriority', 'ALS', 'destinationHint', 'refusalRisk }', 'scoringHooks: [] } Scenario should only reveal information if the player asks for or performs the correct assessment. Example: do not show SpO2 until pulse oximetry is selected; do not reveal medications unless SAMPLE/med list is checked; do not reveal lung sounds unless the player auscultates. Use random deviation branches but keep the mandatory action spine consistent. Example: "intoxication" can branch into simple alcohol', 'co-ingestion', 'hypoglycemia', 'or head injury; however', 'all require ABCs', 'airway protection', 'trauma consideration', 'vitals', 'and transport/refusal logic. For the Pokemon-style stability model: - Airway compromise', 'inadequate breathing', 'major bleeding', 'shock', 'and cardiac arrest should decay quickly. - Correct interventions should improve stability but not magically cure transport-needed patients. - Time-sensitive patients should lose score for unnecessary on-scene delay even if HP remains stable. - Reassessment should be required to receive full credit for any intervention'],
+    gameTags: ['peds', 'choking', 'airway', 'CPR_transition'],
   },
 ];
 
@@ -21091,7 +22360,7 @@ const AEMT_SCENARIOS = [
     dangerousErrors: 'Starting CPR on functioning VAD without proper criteria; leaving spare batteries.',
     deviationBranches: 'GI bleed from anticoagulation, infection/sepsis, dysrhythmia.',
     disposition: 'Specialized center/medical command.',
-    gameTags: ['vad', 'special_pop', 'cardiac', 'device. IMPLEMENTATION NOTES FOR CLAUDE 1. Store each archetype as a scenario template object with nested arrays for dispatchVariants', 'sceneVariants', 'opqrstAnswers', 'sampleAnswers', 'findings', 'vitals', 'branches', 'treatments', 'reassessments', 'errors', 'and handoff. 2. Generate scenario branches by selecting one primaryDiagnosis and 0-2 complicationModifiers: - severity: mild/moderate/severe/critical - hiddenComplication: head injury', 'hypoglycemia', 'opioid coingestion', 'sepsis', 'shock', 'pregnancy', 'CHF', 'airway edema', 'pneumothorax - environment: dorm', 'gym', 'lab', 'campus street', 'party', 'apartment', 'sports field', 'clinic', 'EMS standby - bystanderQuality: reliable', 'anxious', 'minimizing', 'intoxicated', 'absent', 'hostile 3. Use a vitals engine rather than static vitals: - baselineVitals from archetype - deteriorationRate based on severity and missed critical actions - improvementModifiers from correct actions - adverseModifiers from dangerous actions - reassessmentOutput only reveals changes when player asks for specific reassessment. 4. Treatment effect design: - Each treatment should have indicationTags', 'contraindicationTags', 'requiredAssessmentTags', 'and effect curves. - Example: "nitroglycerin" requires suspected_ACS', 'BP_checked', 'SBP_above_threshold', 'no_PDE5', 'no_hypotension. If wrong', 'patient stability drops from hypotension. - Example: "naloxone" helps opioid_resp_depression', 'but "BVM" should improve immediately and score higher if done first when R <8. 5. Pitt/NREMT scenario enforcement: - Build a hidden checklist per scenario from required sequence elements. - Penalize any detailed OPQRST/SAMPLE before ABCs when a life threat exists. - Lock medication menus behind relevant assessment checks when appropriate: BP before nitro', 'lung sounds before bronchodilator', 'glucose before dextrose', 'airway/breathing before naloxone', 'allergy/contraindication check before any medication. 6. AEMT-specific scoring: - Reward when the player uses AEMT tools without delaying definitive care. - Penalize "skill-chasing', '" such as starting an IV before controlling hemorrhage or delaying stroke/STEMI transport just to complete procedures. - Award extra points for correct concentration/route/dose logic', 'reassessment after medication', 'and recognizing when AEMT scope is not enough. 7. Handoff generator fields: - Age/sex', 'chief complaint', 'scene/MOI/NOI', 'initial condition', 'primary assessment', 'pertinent OPQRST/SAMPLE', 'vitals trends', 'treatments with times/doses', 'response to treatment', 'field impression', 'destination/ALS/medical command decisions. 8. Sample JSON-ish mini-template: { id: "AEMT_08_ANAPHYLAXIS_REFRACTORY"', 'tags: ["anaphylaxis"', '"epi_im"', '"fluids"', '"airway"', '"rapid_transport"]', 'requiredAssessments: ["scene_safe"', '"primary_abc"', '"airway"', '"breathing"', '"circulation"', '"skin"', '"vitals"', '"allergies"', '"lung_sounds"', '"reassessment"]', 'criticalActions: ["high_flow_o2_or_bvm"', '"epi_1mg_per_ml_IM_correct_dose"', '"iv_io_nss_for_shock"', '"rapid_transport"', '"medical_command_or_als"]', 'dangerousActions: ["diphenhydramine_before_epi_in_shock"', '"iv_epi_1mg_per_ml_non_arrest"', '"delayed_transport"', '"no_airway_reassessment"]', 'vitals: { initial: {bp:"82/48"', 'pulse:142', 'resp:30', 'spo2:"88-94"', 'loc:"anxious"}', 'correctTrend: {bp:"104/66"', 'pulse:118', 'resp:24', 'spo2:"96"', 'notes:"wheezing improves; hives may persist"}', 'delayedTrend: {bp:"70/40"', 'pulse:156', 'resp:8', 'spo2:"82"', 'notes:"airway swelling worsens', 'mental status declines"} } } END OF FILE'],
+    gameTags: ['vad', 'special_pop', 'cardiac', 'device'],
   },
 ];
 
@@ -21163,6 +22432,14 @@ function pkmEndAfterPatientDeath() {
   if (dr) {
     dr.textContent = 'NO PATIENT SAVED';
     dr.style.color = '#ef476f';
+  }
+  // Stage 3: GTA stamp — patient died on scene. If a critical failure was
+  // logged, the criticalFailure variant takes priority (orange/red flash);
+  // otherwise notSaved (red).
+  {
+    const _hasCf = !!_diedCf;
+    showResultStamp(_hasCf ? 'criticalFailure' : 'notSaved',
+      { subtitle: _hasCf ? 'PROTOCOL MISS' : 'PATIENT LOST' });
   }
   if (typeof _emsqCaptureLastDebrief === 'function') _emsqCaptureLastDebrief();
   document.getElementById('debrief').style.display = 'flex';
@@ -21591,6 +22868,15 @@ function pkmShowSubmenu(category, page, treatCat) {
     sub.appendChild(navRow);
   }
   document.getElementById('pkm-menu').style.display = 'none';
+  // Stage 3 fix: also hide the scene-phase menu (#pkm-menu-scene) when a
+  // submenu opens — otherwise clicking SCENE ASSESSMENT shows the scene
+  // submenu underneath the still-visible "SCENE ASSESSMENT / CONTINUE
+  // ONTO SCENE" buttons. The submenu's BACK button calls pkmReturnToMainMenu
+  // which restores the right menu based on scenePhase.
+  {
+    const _sceneMenu = document.getElementById('pkm-menu-scene');
+    if (_sceneMenu) _sceneMenu.style.display = 'none';
+  }
   sub.style.display = 'flex';
 }
 // Handle a clicked action: profile-driven HP effect, decay, hazard, death check.
@@ -21895,6 +23181,14 @@ async function pkmDoAction(category, label) {
   const names = (typeof crewNames === 'function') ? crewNames() : ['You'];
   const activeName = names[game.pkm.activeProvider || 0] || 'You';
   game.pkm.actionsTaken.push({ category: category, label: label, turn: game.pkm.turn });
+  // Stage 3: as soon as the player does anything outside SCENE (assess,
+  // treat, talk, radio, transport), the patient is "approached" and the
+  // decay/hazard narration is allowed to fire. Scene-size-up actions
+  // (BSI/PPE, scene safety, MOI/NOI, patient count) keep the flag set
+  // so the player can complete scene assessment without spoilers.
+  if (game.pkm._sceneOnly && category !== 'scene') {
+    game.pkm._sceneOnly = false;
+  }
   // Ship 4a: normalize the action to a clinical step and credit progress.
   // Defensive — if the helpers are missing (shouldn't be, but the engine
   // sometimes loads in odd orders), skip silently. Never block the action.
@@ -22229,9 +23523,101 @@ async function pkmDoAction(category, label) {
   // case is preserved separately and only fires when the player clicks
   // REFUSAL on a refusal-eligible call (rolled inside the dispo handler).
   // pkmMaybeAutoTriggerRefusal();   // disabled per Stage 2.8 QOL
+  // ─── Phase 5.5: "Why this matters" teaching feedback ───────────────
+  // Stage 3 QOL: after an action commits, look for common sequence /
+  // clinical misses and surface a short non-blocking teaching tip
+  // (one per miss type per encounter). Helpful for new players;
+  // ignorable for veterans.
+  try { _pkmMaybeShowWhyThisMatters(category, label); } catch (_eW) {}
   // ─── Phase 6: hand control back to the player ──────────────────────
   game.pkm._actionLocked = false;
   pkmReturnToMainMenu();
+}
+// Stage 3 QOL: tiny educational micro-feedback after important misses.
+// One tip per miss type per encounter (tracked on
+// game.pkm._whyShown). All tips fire as system-style dialogue lines
+// inside the encounter, never as blocking modals. Returns silently
+// if no miss is detected on this action.
+function _pkmMaybeShowWhyThisMatters(category, label) {
+  if (!game.pkm) return;
+  if (!game.pkm._whyShown) game.pkm._whyShown = {};
+  const shown = game.pkm._whyShown;
+  const cp    = game.pkm.clinicalProgress || {};
+  const tags  = game.pkm.callTags || [];
+  const has   = (k) => tags.indexOf(k) !== -1;
+  const d     = game.pkm.dispatch || {};
+  const isUnstable = /E0|E1|PRIORITY 1|PRIORITY 2/i.test(
+    (d.erating || '') + ' ' + (d.priority || ''));
+  // Helper: show tip + mark seen.
+  const fire = (key, text) => {
+    if (shown[key]) return;
+    shown[key] = true;
+    pkmDialogue('<i style="color:#7fb3d4;">\uD83D\uDCA1 <b>Why this matters:</b> ' + text + '</i>', 'system');
+  };
+  // 1. Treating before any assessment in an unstable patient.
+  if (category === 'treat' && isUnstable &&
+      !(cp.vitalsObtained || cp.generalImpression || cp.loc ||
+        cp.airwayAssessed || cp.breathingAssessed || cp.circulationAssessed)) {
+    fire('treatBeforeAssess',
+      'On unstable patients, gather a baseline (general impression, ABCs, vitals) before reaching for an intervention \u2014 you can\u2019t pick the right tool without a finding.');
+    return;
+  }
+  // 2. History before ABCs in unstable patient.
+  if (category === 'talk' && /OPQRST|SAMPLE|history|HPI/i.test(label || '') &&
+      isUnstable &&
+      !(cp.airwayAssessed && cp.breathingAssessed && cp.circulationAssessed)) {
+    fire('historyBeforeAbcs',
+      'In unstable patients, airway / breathing / circulation problems must be found and treated before a long history interview.');
+    return;
+  }
+  // 3. Skipping reassessment after an intervention.
+  if ((category === 'transport' || /disposition|transfer|handoff/i.test(label || '')) &&
+      cp.interventionDone && !cp.reassessmentDone) {
+    fire('skippedReassess',
+      'After oxygen, medication, bleeding control, or fluids, repeat vitals + symptom check show whether the patient is improving \u2014 reassessment is what catches deterioration.');
+    return;
+  }
+  // 4. Disposition committed without any capacity / orientation assessment.
+  if (category === 'transport' && /refusal|treat.?release/i.test(label || '') &&
+      !cp.loc) {
+    fire('refusalNoCapacity',
+      'A patient can\u2019t refuse without capacity. Do an AVPU + orientation check (person, place, time, event) and document it before clearing a refusal.');
+    return;
+  }
+  // 5. High-risk refusal opened without medical command.
+  if (category === 'transport' && /refusal/i.test(label || '') &&
+      typeof patientRefusalIsHighRisk === 'function' &&
+      patientRefusalIsHighRisk() && !cp.medicalCommandContacted) {
+    fire('refusalHighRiskNoMC',
+      'Abnormal vitals, chest pain, dyspnea, syncope, head injury, AMS, intoxication, or suicidal ideation make a refusal high-risk \u2014 patch to medical command before clearing.');
+    return;
+  }
+  // 6. ALS handoff with no SAMPLE / vitals.
+  if (category === 'transport' && /als|medic.?handoff/i.test(label || '') &&
+      !(cp.sampleStarted && cp.vitalsObtained)) {
+    fire('alsHandoffNoData',
+      'ALS expects a structured handoff: age/sex, chief complaint, findings, vitals + trend, treatments, response, and reason for ALS. Skipping SAMPLE or baseline vitals leaves the receiving medic flying blind.');
+    return;
+  }
+  // 7. Transport without picking a specialty hospital for a specialty call.
+  if (category === 'transport' && /transport/i.test(label || '')) {
+    const dt = ((d.title || '') + ' ' + (d.desc || '')).toLowerCase();
+    if (has('neuro') && /stroke|cva|tia/.test(dt)) {
+      fire('specialtyStroke',
+        'Suspected stroke: last-known-well drives the time window. Transport to a stroke-capable facility, not just the closest ED \u2014 tPA / thrombectomy availability matters.');
+      return;
+    }
+    if (has('cardiac') && /chest|stemi|mi/.test(dt)) {
+      fire('specialtyStemi',
+        'Suspected STEMI: route to a PCI-capable cath center if available. Time-to-balloon drives outcome.');
+      return;
+    }
+    if (has('peds') || /child|pediatric|infant/.test(dt)) {
+      fire('specialtyPeds',
+        'Pediatric patients do better at pediatric-capable hospitals when feasible \u2014 PICU, peds ED, and weight-based equipment all matter.');
+      return;
+    }
+  }
 }
 // Stage 2.0g: small Promise-based sleep helper for the turn sequencer.
 function pkmSleep(ms) { return new Promise((res) => setTimeout(res, ms)); }
@@ -22413,6 +23799,135 @@ async function pkmRecordFindingForAction(category, label) {
   if (!game.pkm) return;
   const tags = game.pkm.callTags || [];
   const has = (k) => tags.indexOf(k) !== -1;
+  // Stage 3: SCENE size-up actions return real, tag-aware information.
+  // Previously these just narrated "[name] used BSI/PPE!" with no follow-up,
+  // so the player learned nothing from doing scene assessment. Now each
+  // action surfaces a short clinical note tied to the call type — PPE level
+  // recommendation, scene-specific hazards, the mechanism/nature inference,
+  // and resource recommendation — and writes a matching finding to the
+  // patient info panel.
+  if (category === 'scene') {
+    if (label === 'BSI / PPE') {
+      let ppeNote, ppeFind;
+      if (has('trauma') || has('burns')) {
+        ppeNote = 'Trauma scene \u2014 <b>gloves and mask</b> at minimum. Eye protection if active bleeding or splash risk. Long sleeves if you have them.';
+        ppeFind = 'gloves + mask + eye pro (trauma)';
+      } else if (has('shock')) {
+        ppeNote = '<b>Gloves and mask.</b> Possible vomiting or airway secretions \u2014 eye protection a good idea.';
+        ppeFind = 'gloves + mask + eye pro (shock risk)';
+      } else if (has('resp')) {
+        ppeNote = '<b>Gloves and mask</b> \u2014 respiratory complaint, droplet precautions reasonable. N95 if TB / measles / COVID suspected.';
+        ppeFind = 'gloves + mask (droplet precautions)';
+      } else if (has('tox')) {
+        ppeNote = '<b>Gloves at minimum.</b> Mask if vomiting / aspiration risk. Suspect a substance hazard? Step back and let fire/hazmat clear it.';
+        ppeFind = 'gloves + mask (tox)';
+      } else if (has('ob')) {
+        ppeNote = '<b>Full BSI:</b> gloves, mask, eye protection, and a gown if you have one. Childbirth = guaranteed body fluid exposure.';
+        ppeFind = 'gloves + mask + eye pro + gown (OB)';
+      } else if (has('psych')) {
+        ppeNote = '<b>Gloves.</b> Mask if patient is spitting / actively combative. Keep your hands free, keep distance.';
+        ppeFind = 'gloves (psych — distance, hands free)';
+      } else if (has('peds')) {
+        ppeNote = '<b>Gloves and mask.</b> Consider pediatric-sized BVM and oral airway adjuncts before you approach.';
+        ppeFind = 'gloves + mask (peds)';
+      } else {
+        ppeNote = '<b>Gloves at minimum.</b> Mask + eye protection if any blood or splash risk.';
+        ppeFind = 'gloves (baseline BSI)';
+      }
+      await pkmDialogue(ppeNote, 'system');
+      pkmRecordFinding('BSI/PPE', ppeFind);
+    } else if (label === 'Scene safety check') {
+      let safeNote, safeFind;
+      if (has('trauma') || has('burns')) {
+        safeNote = 'Look for <b>ongoing mechanism</b> \u2014 broken glass, sharp metal, fluids, fire, downed wires. Park to protect, not to block. Don\u2019t become a second patient.';
+        safeFind = 'mechanism present, watch for sharps / fluids';
+      } else if (has('psych')) {
+        safeNote = '<b>Scene is your priority.</b> Keep an exit at your back. Anyone armed? Anyone agitated near the patient? Stage out until LE clears it if there\u2019s any doubt.';
+        safeFind = 'psych \u2014 watch for weapons, keep exit';
+      } else if (has('tox')) {
+        safeNote = '<b>Substances and used needles</b> are the threats here. Look at floors and surfaces before kneeling. Air okay? Anyone else affected?';
+        safeFind = 'tox \u2014 watch for sharps + spilled product';
+      } else if (has('shock') || has('resp')) {
+        safeNote = '<b>Allergen / trigger still present?</b> Move the patient away from it if you can do so without injury. Air should be clean to work in.';
+        safeFind = 'remove exposure if possible';
+      } else if (has('cardiac')) {
+        safeNote = 'Scene\u2019s probably fine \u2014 confirm there\u2019s <b>space to work a code</b> if needed. Firm flat surface, room for CPR + AED.';
+        safeFind = 'scene workable; confirm space for code';
+      } else {
+        safeNote = 'Look around: traffic, slippery surfaces, pets, bystanders, electrical, weather. Anything that could hurt you before you reach the patient?';
+        safeFind = 'scene appears safe';
+      }
+      await pkmDialogue(safeNote, 'system');
+      pkmRecordFinding('Scene', safeFind);
+    } else if (label === 'MOI / NOI') {
+      // Stage 3: Mechanism of Injury vs Nature of Illness. The dispatch
+      // tags tell us which it is and what the suspected MOI/NOI is.
+      let moiNote, moiFind;
+      if (has('trauma')) {
+        moiNote = 'This is a <b>traumatic</b> call. Mechanism per dispatch. Think about energy transfer \u2014 was the force significant, focused, blunt, penetrating? Drives c-spine decision + transport priority.';
+        moiFind = 'MOI: trauma per dispatch';
+      } else if (has('burns')) {
+        moiNote = '<b>Burn mechanism.</b> Note source (thermal / chemical / electrical), TBSA, depth, and whether airway was involved.';
+        moiFind = 'MOI: burn';
+      } else if (has('cardiac')) {
+        moiNote = '<b>Medical complaint.</b> NOI: cardiac / chest pain. No mechanism for trauma \u2014 c-spine not indicated.';
+        moiFind = 'NOI: cardiac';
+      } else if (has('resp')) {
+        moiNote = '<b>Medical complaint.</b> NOI: respiratory. Look for triggers \u2014 allergen, exertion, illness, exposure.';
+        moiFind = 'NOI: respiratory';
+      } else if (has('shock')) {
+        moiNote = '<b>Medical complaint.</b> NOI: shock / anaphylaxis pattern \u2014 trace the exposure if you can.';
+        moiFind = 'NOI: shock / anaphylaxis';
+      } else if (has('neuro')) {
+        moiNote = '<b>Medical complaint.</b> NOI: neuro. Stroke vs hypoglycemia vs seizure \u2014 last-known-well matters here.';
+        moiFind = 'NOI: neuro';
+      } else if (has('tox')) {
+        moiNote = '<b>Medical complaint with toxicology.</b> NOI: ingestion / overdose / exposure. Bring the bottle, the bag, the substance if you can.';
+        moiFind = 'NOI: tox';
+      } else if (has('psych')) {
+        moiNote = '<b>Behavioral.</b> Screen for medical mimics (BGL, hypoxia, head injury, intox) before settling on psych.';
+        moiFind = 'NOI: behavioral (rule out medical)';
+      } else if (has('ob')) {
+        moiNote = '<b>OB call.</b> Gestational age, contractions, water broken, bleeding \u2014 each shifts your plan.';
+        moiFind = 'NOI: obstetric';
+      } else {
+        moiNote = 'Illness vs injury? <b>Nature</b> of the complaint shapes everything that follows.';
+        moiFind = 'NOI per dispatch';
+      }
+      await pkmDialogue(moiNote, 'system');
+      pkmRecordFinding('MOI/NOI', moiFind);
+    } else if (label === 'Patient count / call for resources') {
+      // Stage 3: patient count + resources. Most EMS calls are 1 patient;
+      // the value is whether you need to escalate (fire / police / ALS /
+      // additional units / public safety). Tag-aware narration.
+      let countNote, countFind;
+      if (has('trauma') && /MVC|mva|vehicle|crash|rollover|collision/i.test((game.pkm.dispatch && game.pkm.dispatch.title) || '')) {
+        countNote = 'Confirm patient count visually \u2014 vehicle crashes hide patients. <b>Fire</b> for extrication / hazards; <b>PD</b> for traffic control; <b>ALS</b> if you suspect significant mechanism.';
+        countFind = 'confirm pt count (MVC); request fire + PD + ALS as needed';
+      } else if (has('trauma') || has('burns')) {
+        countNote = '<b>1 patient</b> visible. Need additional? <b>Fire</b> for hazards, <b>PD</b> for scene security, <b>ALS</b> for unstable trauma.';
+        countFind = '1 patient; resources per scene';
+      } else if (has('psych')) {
+        countNote = '<b>1 patient.</b> Strongly consider <b>law enforcement</b> if any suicidal / homicidal ideation, agitation, or weapons concern.';
+        countFind = '1 patient; LE recommended (psych)';
+      } else if (has('tox')) {
+        countNote = '<b>1 patient.</b> If exposure is environmental, ask whether <b>anyone else</b> at the scene is affected. Consider <b>ALS</b> for any altered LOC / respiratory depression.';
+        countFind = '1 patient; screen others for exposure';
+      } else if (has('cardiac') || has('shock') || has('resp')) {
+        countNote = '<b>1 patient.</b> Strong indication to request <b>ALS</b> early on this call type.';
+        countFind = '1 patient; ALS warranted';
+      } else if (has('ob')) {
+        countNote = '<b>Potentially 2 patients</b> \u2014 mother and newborn. Request <b>ALS</b> if delivery imminent or any complications.';
+        countFind = 'mother (+/- newborn); ALS if imminent';
+      } else {
+        countNote = '<b>1 patient.</b> No additional resources indicated on first look.';
+        countFind = '1 patient; no escalation';
+      }
+      await pkmDialogue(countNote, 'system');
+      pkmRecordFinding('Patients', countFind);
+    }
+    return;          // scene branch done — don't fall through to assess
+  }
   // Most useful in ASSESS, but a couple of TALK actions surface findings too.
   if (category === 'assess') {
     if (label === 'Full vitals') {
@@ -22423,6 +23938,44 @@ async function pkmRecordFindingForAction(category, label) {
       // tag-tier table if no profile is loaded.
       const dynamicV = pkmCurrentVitals();
       if (dynamicV) {
+        // Stage 3: render a trend comparison if this isn't the first
+        // Full vitals check. Pulls structured numbers (HR, SBP, RR, SpO2)
+        // from the previous and current snapshots and shows arrows for
+        // anything that actually moved. Lets the player SEE that a
+        // treatment is working rather than guessing from near-identical
+        // numbers. Stored on game.pkm._lastVitalsSnap.
+        const curNum = (typeof pkmCurrentVitalNumbers === 'function') ? pkmCurrentVitalNumbers() : null;
+        const prevNum = game.pkm._lastVitalsSnap;
+        if (curNum && prevNum) {
+          const deltaBits = [];
+          const arrow = (cur, prev, label) => {
+            const d = cur - prev;
+            if (d === 0) return null;
+            const sign = d > 0 ? '\u2191' : '\u2193';
+            return label + ' ' + sign + Math.abs(d);
+          };
+          const hrA = arrow(curNum.hr, prevNum.hr, 'HR');
+          if (hrA) deltaBits.push(hrA);
+          const bpA = arrow(curNum.sbp, prevNum.sbp, 'SBP');
+          if (bpA) deltaBits.push(bpA);
+          const rrA = arrow(curNum.rr, prevNum.rr, 'RR');
+          if (rrA) deltaBits.push(rrA);
+          const spo2A = arrow(curNum.spo2, prevNum.spo2, 'SpO\u2082');
+          if (spo2A) deltaBits.push(spo2A);
+          if (deltaBits.length === 0) {
+            await pkmDialogue('<i style="color:#a8b0c4;">Vitals: <b>' + dynamicV + '</b> \u2014 <span style="color:#a8b0c4;">no change since last check.</span></i>', 'system');
+          } else {
+            // Color the delta line by direction \u2014 improving (e.g.
+            // HR falling, SpO\u2082 rising) reads green, deteriorating reads
+            // red. We can't tell improvement directly from numeric delta
+            // alone (HR \u2193 is good in shock, neutral in bradycardia),
+            // but the arrows themselves are informative.
+            await pkmDialogue('<i style="color:#a8b0c4;">Vitals: <b>' + dynamicV + '</b><br>Trend since last check: <b>' + deltaBits.join(' \u00b7 ') + '</b></i>', 'system');
+          }
+        } else if (curNum) {
+          await pkmDialogue('<i style="color:#a8b0c4;">Vitals captured: <b>' + dynamicV + '</b></i>', 'system');
+        }
+        if (curNum) game.pkm._lastVitalsSnap = curNum;
         pkmRecordFinding('Vitals', dynamicV);
       } else {
         const erating = (game.destination && game.destination.dispatch && game.destination.dispatch.erating) || 'E2';
@@ -23065,63 +24618,206 @@ async function pkmRunSampleSequence(tags) {
     Object.keys(data).forEach(k => { game.pkm.profile[k] = data[k]; });
     if (typeof updatePatientNotes === 'function') updatePatientNotes();
   };
-  // alert / painful / anxious \u2014 give a real history
+  // alert / painful / anxious \u2014 give a real history.
+  // Stage 3: per-call variant rotation so the same tag doesn\u2019t feel
+  // identical across repeated calls. Variant index is stable per call
+  // (cached on game.pkm._sampleVariantIdx) and derived from a hash of
+  // the dispatch title, so two cardiac calls in one shift get
+  // different stories but the SAME call always tells the same story.
+  if (typeof game.pkm._sampleVariantIdx !== 'number') {
+    const dt = (dispatch && dispatch.title) || '';
+    let h = 0;
+    for (let i = 0; i < dt.length; i++) h = ((h << 5) - h + dt.charCodeAt(i)) | 0;
+    game.pkm._sampleVariantIdx = Math.abs(h);
+  }
+  const _vIdx = game.pkm._sampleVariantIdx;
   if (has('cardiac')) {
-    await pkmDialogue('<i>"Allergies?" "Penicillin. Gives me a rash."</i>', 'patient');
-    await pkmDialogue('<i>"Meds?" "Aspirin, metoprolol, atorvastatin."</i>', 'patient');
-    await pkmDialogue('<i>"Past medical history?" "High blood pressure, high cholesterol. Stent in 2019."</i>', 'patient');
-    await pkmDialogue('<i>"Last oral intake?" "Coffee an hour ago. Nothing else today."</i>', 'patient');
-    await pkmDialogue('<i>"Events?" "Watching TV \u2014 came on out of nowhere."</i>', 'patient');
-    pkmRecordFinding('SAMPLE', 'PCN allergy; ASA/metop/atorva; HTN/HLD/stent 2019; LM coffee 1hr');
-    persistSample({
-      allergies:   'Penicillin (rash)',
-      medications: 'Aspirin, metoprolol, atorvastatin',
-      pmhx:        'HTN, HLD, stent 2019',
-      lastOral:    'Coffee ~1hr ago',
-      events:      'Watching TV \u2014 came on suddenly',
-      signs:       'Substernal pressure, diaphoresis, anxious',
-    });
+    // Three cardiac SAMPLE archetypes:
+    //   0 \u2014 known CAD with stent (classic ACS)
+    //   1 \u2014 first-time chest pain, hypertensive, undertreated
+    //   2 \u2014 atypical presentation in diabetic woman
+    const variants = [
+      {
+        lines: [
+          ['"Allergies?"', '"Penicillin. Gives me a rash."'],
+          ['"Meds?"', '"Aspirin, metoprolol, atorvastatin."'],
+          ['"Past medical history?"', '"High blood pressure, high cholesterol. Stent in 2019."'],
+          ['"Last oral intake?"', '"Coffee an hour ago. Nothing else today."'],
+          ['"Events?"', '"Watching TV \u2014 came on out of nowhere."'],
+        ],
+        finding: 'PCN allergy; ASA/metop/atorva; HTN/HLD/stent 2019; LM coffee 1hr',
+        sample: { allergies: 'Penicillin (rash)', medications: 'Aspirin, metoprolol, atorvastatin',
+          pmhx: 'HTN, HLD, stent 2019', lastOral: 'Coffee ~1hr ago',
+          events: 'Watching TV \u2014 came on suddenly',
+          signs: 'Substernal pressure, diaphoresis, anxious' },
+      },
+      {
+        lines: [
+          ['"Allergies?"', '"None that I know of."'],
+          ['"Meds?"', '"Nothing regularly. I run out of my BP pill sometimes."'],
+          ['"Past medical history?"', '"High blood pressure. Doctor wanted me on a statin but I never started."'],
+          ['"Last oral intake?"', '"Big lunch \u2014 a burger maybe 90 minutes ago."'],
+          ['"Events?"', '"Walking back from the parking garage and it just\u2026 hit me."'],
+        ],
+        finding: 'NKDA; HTN poorly controlled; LM burger 90m; exertional onset',
+        sample: { allergies: 'NKDA', medications: 'Lisinopril (compliance poor)',
+          pmhx: 'HTN; declined statin', lastOral: 'Heavy lunch ~90min ago',
+          events: 'Walking from parking garage \u2014 sudden onset',
+          signs: 'Substernal pressure, diaphoretic, anxious' },
+      },
+      {
+        lines: [
+          ['"Allergies?"', '"Sulfa drugs. They give me hives."'],
+          ['"Meds?"', '"Metformin, glipizide, and one for cholesterol."'],
+          ['"Past medical history?"', '"Type 2 diabetes for fifteen years. High cholesterol."'],
+          ['"Last oral intake?"', '"Just water. I forgot to eat breakfast."'],
+          ['"Events?"', '"I just feel\u2026 tired. And nauseous. My jaw aches. I thought it was a flu."'],
+        ],
+        finding: 'sulfa allergy; T2DM 15yr; HLD; LM water only; atypical sx (jaw, nausea, fatigue)',
+        sample: { allergies: 'Sulfa (hives)', medications: 'Metformin, glipizide, atorvastatin',
+          pmhx: 'T2DM 15yr, HLD', lastOral: 'Water only, no breakfast',
+          events: 'Gradual onset \u2014 tired, nauseous, jaw pain',
+          signs: 'Atypical chest discomfort, jaw pain, diaphoresis, anxious' },
+      },
+    ];
+    const v = variants[_vIdx % variants.length];
+    for (const [q, a] of v.lines) {
+      await pkmDialogue('<i>' + q + ' ' + a + '</i>', 'patient');
+    }
+    pkmRecordFinding('SAMPLE', v.finding);
+    persistSample(v.sample);
   } else if (has('shock')) {
-    await pkmDialogue('<i>"Allergies?" "Peanuts. Bad ones."</i>', 'patient');
-    await pkmDialogue('<i>"Do you carry an EpiPen?" "I do but I left it at home."</i>', 'patient');
-    await pkmDialogue('<i>"Meds?" "Just the EpiPen normally."</i>', 'patient');
-    await pkmDialogue('<i>"What did you eat?" "A cookie at the coffee shop. Right before this started."</i>', 'patient');
-    pkmRecordFinding('SAMPLE', 'peanut allergy; EpiPen at home (gone); cookie at coffee shop');
-    persistSample({
-      allergies:   'Peanuts (severe)',
-      medications: 'EpiPen prescribed (left at home)',
-      pmhx:        'Anaphylaxis hx',
-      lastOral:    'Cookie at coffee shop (just before onset)',
-      events:      'Ate a cookie at coffee shop \u2014 reaction started shortly after',
-      signs:       'Hives spreading, throat tight, work of breathing increased',
-    });
+    // Three anaphylaxis archetypes:
+    //   0 \u2014 known peanut, EpiPen at home
+    //   1 \u2014 bee sting, no prior reaction
+    //   2 \u2014 new med exposure, atypical
+    const variants = [
+      {
+        lines: [
+          ['"Allergies?"', '"Peanuts. Bad ones."'],
+          ['"Do you carry an EpiPen?"', '"I do but I left it at home."'],
+          ['"Meds?"', '"Just the EpiPen normally."'],
+          ['"What did you eat?"', '"A cookie at the coffee shop. Right before this started."'],
+        ],
+        finding: 'peanut allergy; EpiPen at home (gone); cookie at coffee shop',
+        sample: { allergies: 'Peanuts (severe)', medications: 'EpiPen prescribed (left at home)',
+          pmhx: 'Anaphylaxis hx', lastOral: 'Cookie at coffee shop (just before onset)',
+          events: 'Ate a cookie at coffee shop \u2014 reaction started shortly after',
+          signs: 'Hives spreading, throat tight, work of breathing increased' },
+      },
+      {
+        lines: [
+          ['"Allergies?"', '"I didn\u2019t think I had any. Just bee stings make me itchy normally."'],
+          ['"Meds?"', '"Nothing daily. Maybe Tylenol sometimes."'],
+          ['"What happened?"', '"I got stung walking past the planter. By my neck."'],
+          ['"How fast did it come on?"', '"Couple minutes? I just\u2026 my throat felt thick."'],
+        ],
+        finding: 'no known anaphylaxis hx; bee sting to neck; rapid onset; no EpiPen on hand',
+        sample: { allergies: 'No prior anaphylaxis (bee sting itch only)', medications: 'OTC PRN',
+          pmhx: 'No prior anaphylaxis', lastOral: 'Not asked',
+          events: 'Bee sting to neck \u2014 sx in minutes',
+          signs: 'Throat tight, hives, work of breathing increased' },
+      },
+      {
+        lines: [
+          ['"Allergies?"', '"None that I knew of. Until\u2026 now, maybe."'],
+          ['"Meds?"', '"I just started a new antibiotic two days ago."'],
+          ['"Which one?"', '"Amoxicillin. For a sinus thing."'],
+          ['"When did this start?"', '"Twenty minutes after I took today\u2019s dose."'],
+        ],
+        finding: 'new amoxicillin exposure; sx ~20m post-dose; no prior reaction',
+        sample: { allergies: 'Suspected new PCN reaction', medications: 'Amoxicillin (day 2)',
+          pmhx: 'No prior anaphylaxis', lastOral: 'Amoxicillin dose ~20min ago',
+          events: 'Took today\u2019s amoxicillin \u2014 sx began ~20min later',
+          signs: 'Hives, throat tightness, wheeze, anxious' },
+      },
+    ];
+    const v = variants[_vIdx % variants.length];
+    for (const [q, a] of v.lines) {
+      await pkmDialogue('<i>' + q + ' ' + a + '</i>', 'patient');
+    }
+    pkmRecordFinding('SAMPLE', v.finding);
+    persistSample(v.sample);
   } else if (has('resp')) {
-    await pkmDialogue('<i>"Allergies?" "(gasp) None\u2026 known."</i>', 'patient');
-    await pkmDialogue('<i>"Meds?" "Albuterol\u2026 and Symbicort."</i>', 'patient');
-    await pkmDialogue('<i>"Past medical history?" "Asthma\u2026 since\u2026 a kid."</i>', 'patient');
-    await pkmDialogue('<i>"Events?" "Walking outside\u2026 (gasp)\u2026 just got tight."</i>', 'patient');
-    pkmRecordFinding('SAMPLE', 'asthma; albuterol/Symbicort; outside walk; NKDA');
-    persistSample({
-      allergies:   'NKDA',
-      medications: 'Albuterol, Symbicort',
-      pmhx:        'Asthma (childhood onset)',
-      lastOral:    'Not asked / unknown',
-      events:      'Walking outside, then tightness came on',
-      signs:       'Audible wheeze, accessory muscle use, 2-3 word sentences',
-    });
+    // Three respiratory archetypes:
+    //   0 \u2014 known asthma, used inhaler
+    //   1 \u2014 COPDer with recent URI
+    //   2 \u2014 exercise-induced asthma, expired inhaler
+    const variants = [
+      {
+        lines: [
+          ['"Allergies?"', '"(gasp) None\u2026 known."'],
+          ['"Meds?"', '"Albuterol\u2026 and Symbicort."'],
+          ['"Past medical history?"', '"Asthma\u2026 since\u2026 a kid."'],
+          ['"Events?"', '"Walking outside\u2026 (gasp)\u2026 just got tight."'],
+        ],
+        finding: 'asthma; albuterol/Symbicort; outside walk; NKDA',
+        sample: { allergies: 'NKDA', medications: 'Albuterol, Symbicort',
+          pmhx: 'Asthma (childhood onset)', lastOral: 'Not asked',
+          events: 'Walking outside, then tightness came on',
+          signs: 'Audible wheeze, accessory muscle use, 2-3 word sentences' },
+      },
+      {
+        lines: [
+          ['"Allergies?"', '"(gasp) None."'],
+          ['"Meds?"', '"Tiotropium\u2026 albuterol\u2026 home O2 at night."'],
+          ['"Past medical history?"', '"COPD\u2026 40 years smoking. Quit\u2026 two years ago."'],
+          ['"Events?"', '"Bad cold last week\u2026 (gasp)\u2026 woke up like this."'],
+        ],
+        finding: 'COPD; home O2 nocturnal; recent URI; ex-smoker; NKDA',
+        sample: { allergies: 'NKDA', medications: 'Tiotropium, albuterol PRN, home O2 nocturnal',
+          pmhx: 'COPD, 40 pack-year (quit 2 years)', lastOral: 'Not asked',
+          events: 'URI last week \u2014 woke this morning in distress',
+          signs: 'Pursed-lip breathing, prolonged expiration, wheeze, tripod posture' },
+      },
+      {
+        lines: [
+          ['"Allergies?"', '"(gasp) Just\u2026 pollen."'],
+          ['"Meds?"', '"Albuterol\u2026 but it\u2019s\u2026 empty. Expired too."'],
+          ['"Past medical history?"', '"Exercise-induced asthma."'],
+          ['"Events?"', '"Club rugby practice\u2026 (gasp)\u2026 worse than usual today."'],
+        ],
+        finding: 'exercise asthma; expired empty inhaler; pollen allergy',
+        sample: { allergies: 'Seasonal (pollen)', medications: 'Albuterol PRN (expired, empty)',
+          pmhx: 'Exercise-induced asthma', lastOral: 'Not asked',
+          events: 'Rugby practice, worse than baseline',
+          signs: 'Audible wheeze, anxious, 3-word sentences' },
+      },
+    ];
+    const v = variants[_vIdx % variants.length];
+    for (const [q, a] of v.lines) {
+      await pkmDialogue('<i>' + q + ' ' + a + '</i>', 'patient');
+    }
+    pkmRecordFinding('SAMPLE', v.finding);
+    persistSample(v.sample);
   } else if (has('trauma')) {
     // Stage 2.9.5b: trauma narrative now matches the dispatched MOI.
-    await pkmDialogue('<i>"Allergies?" "No, none."</i>', 'patient');
-    await pkmDialogue('<i>"Meds?" "Just a multivitamin."</i>', 'patient');
-    await pkmDialogue('<i>"Past medical history?" "Nothing serious. ADHD."</i>', 'patient');
+    // Stage 3: light variant pool for the boilerplate fields (allergies,
+    // meds, PMHx). The events line still comes from story.events so the
+    // mechanism stays consistent with the dispatch.
+    const variants = [
+      { allergies: 'NKDA', medications: 'Multivitamin', pmhx: 'ADHD',
+        a1: '"No, none."', a2: '"Just a multivitamin."', a3: '"Nothing serious. ADHD."' },
+      { allergies: 'Latex (mild)', medications: 'Adderall',
+        pmhx: 'ADHD, anxiety',
+        a1: '"Latex. Just a rash though."', a2: '"Adderall, daily."', a3: '"ADHD, anxiety."' },
+      { allergies: 'NKDA', medications: 'Sertraline',
+        pmhx: 'Depression, mild',
+        a1: '"None."', a2: '"Sertraline."', a3: '"Just depression, on meds for it."' },
+    ];
+    const v = variants[_vIdx % variants.length];
+    await pkmDialogue('<i>"Allergies?" ' + v.a1 + '</i>', 'patient');
+    await pkmDialogue('<i>"Meds?" ' + v.a2 + '</i>', 'patient');
+    await pkmDialogue('<i>"Past medical history?" ' + v.a3 + '</i>', 'patient');
     const eventsLine = story.events ||
         'I was just doing my thing and got hurt. It happened pretty fast.';
     await pkmDialogue('<i>"What happened?" "' + eventsLine + '"</i>', 'patient');
-    pkmRecordFinding('SAMPLE', story.sample || 'NKDA; multivitamin; ADHD; trauma per pt');
+    pkmRecordFinding('SAMPLE', story.sample ||
+      (v.allergies + '; ' + v.medications + '; ' + v.pmhx + '; trauma per pt'));
     persistSample({
-      allergies:   'NKDA',
-      medications: 'Multivitamin',
-      pmhx:        'ADHD',
+      allergies:   v.allergies,
+      medications: v.medications,
+      pmhx:        v.pmhx,
       lastOral:    'Not asked / unknown',
       events:      eventsLine,
       signs:       (story.bodyPart ? story.bodyPart + ' injury per pt' : 'Mechanism per pt'),
@@ -23176,33 +24872,125 @@ async function pkmRunOpqrstSequence(tags) {
     Object.keys(data).forEach(k => { game.pkm.profile[k] = data[k]; });
     if (typeof updatePatientNotes === 'function') updatePatientNotes();
   };
+  // Stage 3: reuse the per-call variant index from SAMPLE so the OPQRST
+  // story stays internally consistent with the SAMPLE answers for the
+  // same call. Falls back to a fresh hash if SAMPLE wasn't asked first.
+  let _vIdx = (game.pkm && typeof game.pkm._sampleVariantIdx === 'number')
+    ? game.pkm._sampleVariantIdx : null;
+  if (_vIdx === null) {
+    const dt2 = ((game.pkm && game.pkm.dispatch && game.pkm.dispatch.title) || '');
+    let h = 0;
+    for (let i = 0; i < dt2.length; i++) h = ((h << 5) - h + dt2.charCodeAt(i)) | 0;
+    _vIdx = Math.abs(h);
+    if (game.pkm) game.pkm._sampleVariantIdx = _vIdx;
+  }
   if (has('cardiac')) {
-    await pkmDialogue('<i>"When did it start?" "About thirty minutes ago. On the couch."</i>', 'patient');
-    await pkmDialogue('<i>"What does it feel like?" "Pressure. Like an elephant on my chest."</i>', 'patient');
-    await pkmDialogue('<i>"Does it spread anywhere?" "Down my left arm. Into my jaw."</i>', 'patient');
-    await pkmDialogue('<i>"Severity 1 to 10?" "Eight. It\u2019s bad."</i>', 'patient');
-    pkmRecordFinding('OPQRST', 'sudden, pressure, radiates L arm/jaw, 8/10, 30m');
-    persistOpqrst({
-      onset: 'Sudden, ~30 minutes ago, at rest on couch',
-      provoc: 'No clear trigger; not relieved by rest',
-      quality: 'Pressure \u2014 "elephant on chest"',
-      region: 'Substernal; radiates to L arm and jaw',
-      severity: '8/10',
-      timeOfOnset: '~30 min ago',
-    });
+    // Three OPQRST cardiac variants matched to the SAMPLE archetypes:
+    //   0 \u2014 classic ACS: pressure, radiates L arm/jaw, severe
+    //   1 \u2014 exertional, no radiation, less severe but worsening
+    //   2 \u2014 atypical diabetic: tired, nauseous, jaw ache, no chest pain
+    const variants = [
+      {
+        lines: [
+          ['"When did it start?"', '"About thirty minutes ago. On the couch."'],
+          ['"What does it feel like?"', '"Pressure. Like an elephant on my chest."'],
+          ['"Does it spread anywhere?"', '"Down my left arm. Into my jaw."'],
+          ['"Severity 1 to 10?"', '"Eight. It\u2019s bad."'],
+        ],
+        finding: 'sudden, pressure, radiates L arm/jaw, 8/10, 30m',
+        op: { onset: 'Sudden, ~30 minutes ago, at rest on couch',
+              provoc: 'No clear trigger; not relieved by rest',
+              quality: 'Pressure \u2014 "elephant on chest"',
+              region: 'Substernal; radiates to L arm and jaw',
+              severity: '8/10', timeOfOnset: '~30 min ago' },
+      },
+      {
+        lines: [
+          ['"When did it start?"', '"Walking back to my car. Maybe twenty minutes."'],
+          ['"What does it feel like?"', '"Tight. Squeezing in the middle of my chest."'],
+          ['"Does it move at all?"', '"Not really. Stays right here."'],
+          ['"Severity?"', '"Six right now. Started at four, but it\u2019s climbing."'],
+        ],
+        finding: 'exertional onset, central squeeze, no radiation, 4 \u2192 6/10, 20m',
+        op: { onset: 'Exertional, ~20 minutes ago walking',
+              provoc: 'Worse with movement; not fully relieved at rest',
+              quality: 'Squeezing, central',
+              region: 'Substernal, no radiation reported',
+              severity: '6/10 and climbing', timeOfOnset: '~20 min ago' },
+      },
+      {
+        lines: [
+          ['"When did this start?"', '"This morning? It\u2019s been hours. I thought it was the flu."'],
+          ['"What does it feel like?"', '"I just feel\u2026 wrong. Nauseous. My jaw aches."'],
+          ['"Any chest pain?"', '"Not really pain. Just heavy. Tired."'],
+          ['"Severity?"', '"Of what? It\u2019s not pain. I don\u2019t know. Five?"'],
+        ],
+        finding: 'atypical \u2014 fatigue, nausea, jaw ache, no frank chest pain; hours',
+        op: { onset: 'Gradual onset over hours, this morning',
+              provoc: 'No clear trigger; mistook for "the flu"',
+              quality: 'Heavy, fatigued, nauseous, jaw aches \u2014 atypical',
+              region: 'Diffuse; jaw involvement',
+              severity: '5/10 (atypical sx)', timeOfOnset: 'Hours ago' },
+      },
+    ];
+    const v = variants[_vIdx % variants.length];
+    for (const [q, a] of v.lines) {
+      await pkmDialogue('<i>' + q + ' ' + a + '</i>', 'patient');
+    }
+    pkmRecordFinding('OPQRST', v.finding);
+    persistOpqrst(v.op);
   } else if (has('resp')) {
-    await pkmDialogue('<i>"When did it start?" "(gasp)\u2026 hour ago. Walking."</i>', 'patient');
-    await pkmDialogue('<i>"What does it feel like?" "Tight. (gasp) Can\u2019t get a deep breath."</i>', 'patient');
-    await pkmDialogue('<i>"Severity?" "Seven. (gasp) Maybe eight."</i>', 'patient');
-    pkmRecordFinding('OPQRST', 'gradual onset, tight central, 7-8/10, 1hr');
-    persistOpqrst({
-      onset: 'Gradual, ~1 hour ago while walking',
-      provoc: 'Worse with exertion; improves slightly with rest + upright',
-      quality: 'Tight, "can\u2019t get a deep breath"',
-      region: 'Central chest / diffuse',
-      severity: '7-8/10',
-      timeOfOnset: '~1 hour ago',
-    });
+    // Three OPQRST respiratory variants:
+    //   0 \u2014 asthma: gradual, tight, walking, 7-8/10
+    //   1 \u2014 COPD post-URI: woke up like this, prolonged expiration
+    //   2 \u2014 exercise-induced, expired inhaler
+    const variants = [
+      {
+        lines: [
+          ['"When did it start?"', '"(gasp)\u2026 hour ago. Walking."'],
+          ['"What does it feel like?"', '"Tight. (gasp) Can\u2019t get a deep breath."'],
+          ['"Severity?"', '"Seven. (gasp) Maybe eight."'],
+        ],
+        finding: 'gradual onset, tight central, 7-8/10, 1hr',
+        op: { onset: 'Gradual, ~1 hour ago while walking',
+              provoc: 'Worse with exertion; improves slightly with rest + upright',
+              quality: 'Tight, "can\u2019t get a deep breath"',
+              region: 'Central chest / diffuse',
+              severity: '7-8/10', timeOfOnset: '~1 hour ago' },
+      },
+      {
+        lines: [
+          ['"When did it start?"', '"(gasp) Woke up like this. Few hours."'],
+          ['"What does it feel like?"', '"Heavy. (gasp) Can\u2019t blow it out."'],
+          ['"Severity?"', '"Eight. Worse than my usual."'],
+        ],
+        finding: 'awoke in distress, prolonged expiration, 8/10, hours',
+        op: { onset: 'Awoke this morning already short of breath',
+              provoc: 'Recent URI; worse with any exertion',
+              quality: 'Heavy; prolonged expiration; pursed-lip pattern',
+              region: 'Diffuse chest',
+              severity: '8/10 \u2014 above baseline', timeOfOnset: 'Hours (since waking)' },
+      },
+      {
+        lines: [
+          ['"When did it start?"', '"(gasp) Practice. About forty minutes."'],
+          ['"What does it feel like?"', '"Wheezy. (gasp) Worse than usual."'],
+          ['"Severity?"', '"Seven. (gasp) My inhaler\u2019s empty."'],
+        ],
+        finding: 'exertional, wheezy, 7/10, ~40m; rescue inhaler empty',
+        op: { onset: 'Exertional, ~40 min ago at practice',
+              provoc: 'Worse with running; better when resting upright',
+              quality: 'Wheezy, tight',
+              region: 'Diffuse',
+              severity: '7/10', timeOfOnset: '~40 min ago' },
+      },
+    ];
+    const v = variants[_vIdx % variants.length];
+    for (const [q, a] of v.lines) {
+      await pkmDialogue('<i>' + q + ' ' + a + '</i>', 'patient');
+    }
+    pkmRecordFinding('OPQRST', v.finding);
+    persistOpqrst(v.op);
   } else if (has('trauma')) {
     const dispatch = (game.pkm && game.pkm.dispatch) || null;
     const story = _pkmStoryFromDispatch(dispatch);
@@ -24457,6 +26245,13 @@ function pkmFlavorFor(category, label, tags) {
 function pkmMaybeRollSceneHazard() {
   if (!game.pkm) return;
   if (game.pkm.patientDead || game.pkm.needsReset) return;
+  // Stage 3: while the player is still in the scene-size-up phase (only
+  // SCENE actions taken so far), don't roll bystander/patient hazards.
+  // A "Bystander shoves you" or "Patient retches" event landing during
+  // BSI/PPE or MOI/NOI makes no narrative sense — the medic hasn't even
+  // approached the patient yet. The flag flips false on the first
+  // non-scene action (see pkmDoAction).
+  if (game.pkm._sceneOnly) return;
   if (Math.random() > game.pkm.hazardBase) return;
   // Pick a tag-relevant hazard pool. If no specific tag matches, fall back.
   const tags = game.pkm.callTags || [];
@@ -24939,6 +26734,19 @@ function completeCallAlsDelivery(dispatch, chosenHospital, alsTag) {
       : (_cfBlock1 + resultMsg + _coachBlock1);
   document.getElementById('debrief-result').textContent = resultText;
   document.getElementById('debrief-result').style.color = resultColor;
+  // Stage 3: GTA stamp — ALS handoff path. CF takes priority, then
+  // notSaved for wrong-hospital, otherwise alsTransfer.
+  {
+    const _isCf = /CRITICAL FAILURE|COMPETENCY FAILURE/.test(titleText + ' ' + resultText);
+    const _isLoss = /NO PATIENT SAVED/.test(resultText) && !_isCf;
+    if (_isCf) {
+      showResultStamp('criticalFailure', { subtitle: 'REVIEW REQUIRED' });
+    } else if (_isLoss) {
+      showResultStamp('notSaved', { subtitle: 'WRONG DESTINATION' });
+    } else {
+      showResultStamp('alsTransfer', { subtitle: 'MEDIC ON SCENE' });
+    }
+  }
   if (typeof _emsqCaptureLastDebrief === 'function') _emsqCaptureLastDebrief();
   document.getElementById('debrief').style.display = 'flex';
   game.mode = 'debrief';
@@ -25036,6 +26844,19 @@ function completeHospitalDelivery() {
       : (_cfBlock2 + resultMsg + _coachBlock2);
   document.getElementById('debrief-result').textContent = _resultText2;
   document.getElementById('debrief-result').style.color = resultColor;
+  // Stage 3: GTA stamp — transport delivered to hospital. CF / wrong
+  // destination → not saved variants; otherwise transportComplete.
+  {
+    const _isCf = /CRITICAL FAILURE|COMPETENCY FAILURE/.test(_titleText2 + ' ' + _resultText2);
+    const _isLoss = /NO PATIENT SAVED/.test(_resultText2) && !_isCf;
+    if (_isCf) {
+      showResultStamp('criticalFailure', { subtitle: 'REVIEW REQUIRED' });
+    } else if (_isLoss) {
+      showResultStamp('notSaved', { subtitle: 'WRONG DESTINATION' });
+    } else {
+      showResultStamp('transportComplete', { subtitle: 'HOSPITAL NOTIFIED' });
+    }
+  }
   if (typeof _emsqCaptureLastDebrief === 'function') _emsqCaptureLastDebrief();
   document.getElementById('debrief').style.display = 'flex';
   game.mode = 'debrief';
@@ -25182,6 +27003,23 @@ function resolveRefusal(dispatch) {
       : (_cfBlock3 + resultMsg + _coachBlock3);
   document.getElementById('debrief-result').textContent = resultText;
   document.getElementById('debrief-result').style.color = resultColor;
+  // Stage 3: GTA stamp — refusal or treat-and-release path. The kind
+  // recorded earlier (treat_release vs refusal) drives the stamp choice;
+  // CF override and incorrect refusal both demote to a loss stamp.
+  {
+    const _isCf = /CRITICAL FAILURE|COMPETENCY FAILURE/.test(titleText + ' ' + resultText);
+    const _isLoss = /NO PATIENT SAVED/.test(resultText) && !_isCf;
+    const _isTR = !!(dispatch && dispatch.needsTransport);   // CEMS T&R path
+    if (_isCf) {
+      showResultStamp('criticalFailure', { subtitle: 'REVIEW REQUIRED' });
+    } else if (_isLoss) {
+      showResultStamp('notSaved', { subtitle: 'UNDER-TRIAGED' });
+    } else if (_isTR) {
+      showResultStamp('treatRelease', { subtitle: 'RETURN PRECAUTIONS GIVEN' });
+    } else {
+      showResultStamp('refusalComplete', { subtitle: 'RMA COMPLETE' });
+    }
+  }
   if (typeof _emsqCaptureLastDebrief === 'function') _emsqCaptureLastDebrief();
   document.getElementById('debrief').style.display = 'flex';
   game.mode = 'debrief';
@@ -41861,8 +43699,10 @@ function _quizRenderPhase() {
   // on every render so the toggle takes effect immediately. Also mirrors
   // onto the keyboard-help overlay if it's currently open.
   if (m) {
-    if (q.reduceMotion) m.classList.add('qz-no-motion');
-    else m.classList.remove('qz-no-motion');
+    // Stage 3: reduce-motion toggle removed. Always strip qz-no-motion
+    // so any stale class from a previous session doesn't disable
+    // animations going forward.
+    m.classList.remove('qz-no-motion');
     // Stage 2.9 QOL: text-size class. Always strip all four tiers first
     // so changing the slider doesn't leave stale classes (CSS zoom would
     // compound otherwise — qz-text-lg + qz-text-xl on the same element
@@ -41874,8 +43714,7 @@ function _quizRenderPhase() {
   }
   const helpO = document.getElementById('qz-help-overlay');
   if (helpO) {
-    if (q.reduceMotion) helpO.classList.add('qz-no-motion');
-    else helpO.classList.remove('qz-no-motion');
+    helpO.classList.remove('qz-no-motion');
   }
   // Stage 2.8: try/catch so a single bad question (e.g. malformed
   // explanation) can't crash the arcade. We surface a recovery card
@@ -42100,14 +43939,6 @@ function _quizRenderPrequiz(m) {
             'border-radius:4px; font-size:10px; letter-spacing:1px; ' +
             'font-family:inherit; font-weight:600;">CLEAR MISSED</button>'
           : '') +
-        ((_emsqStats.getReports() || []).length > 0
-          ? '<button id="qz-reports-export" title="Download reported-question queue as JSON" ' +
-            'style="background:transparent; border:1px solid #d4a574; ' +
-            'color:#a36711; cursor:pointer; padding:4px 10px; ' +
-            'border-radius:4px; font-size:10px; letter-spacing:1px; ' +
-            'font-family:inherit; font-weight:600;">' +
-            'REPORTS (' + (_emsqStats.getReports() || []).length + ')</button>'
-          : '') +
         '<button id="qz-stats-reset" title="Reset all quiz stats + missed pile + flagged pile" ' +
           'style="background:transparent; border:1px solid #c9c2ad; ' +
           'color:#8a8276; cursor:pointer; padding:4px 10px; ' +
@@ -42233,34 +44064,6 @@ function _quizRenderPrequiz(m) {
           '</div>' +
           '<div style="font-size:11px; color:#5a5a4a; margin-top:2px;">' +
             (!q.muteMusic ? 'Plays during the quiz' : 'Muted while you take this quiz') +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-    '</div>' +
-    // Stage 2.8 QOL: Reduce-motion accessibility toggle. Disables CSS
-    // transitions/animations inside the quiz modal (and help overlay).
-    // Only affects quiz UI \u2014 the rest of the game's motion is untouched.
-    '<div style="margin-bottom:16px; padding:10px 12px; ' +
-      'background:' + (q.reduceMotion ? 'rgba(10, 122, 82, 0.10)' : '#ebe5d2') + '; ' +
-      'border:2px solid ' + (q.reduceMotion ? '#0a7a52' : '#c9c2ad') + '; ' +
-      'border-radius:6px;">' +
-      '<div style="display:flex; align-items:center; gap:12px; cursor:pointer;" id="qz-motion-row">' +
-        '<div style="width:36px; height:20px; border-radius:10px; ' +
-          'background:' + (q.reduceMotion ? '#0a7a52' : '#a8a08a') + '; ' +
-          'position:relative; transition:background 120ms ease; flex-shrink:0;">' +
-          '<div style="width:14px; height:14px; border-radius:50%; ' +
-            'background:#fff; position:absolute; top:3px; ' +
-            'left:' + (q.reduceMotion ? '19px' : '3px') + '; ' +
-            'transition:left 120ms ease;"></div>' +
-        '</div>' +
-        '<div style="flex:1;">' +
-          '<div style="font-size:12px; font-weight:700; letter-spacing:1px; color:#1a1a2e;">' +
-            'REDUCE MOTION' +
-          '</div>' +
-          '<div style="font-size:11px; color:#5a5a4a; margin-top:2px;">' +
-            (q.reduceMotion
-              ? 'On \u2014 transitions and animations disabled in this quiz'
-              : 'Off \u2014 toggle if motion bothers you (a11y)') +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -42467,15 +44270,10 @@ function _quizRenderPrequiz(m) {
       _quizRenderPhase();
     });
   }
-  // Stage 2.8 QOL: reduce-motion toggle handler.
-  const motionRow = m.querySelector('#qz-motion-row');
-  if (motionRow) {
-    motionRow.addEventListener('click', () => {
-      q.reduceMotion = !q.reduceMotion;
-      _quizPersistPrefs();
-      _quizRenderPhase();
-    });
-  }
+  // Stage 3: per user request, the reduce-motion toggle is removed.
+  // Toggle render was deleted above; the click handler is also gone.
+  // The qz-no-motion CSS class is no longer applied to the quiz modal,
+  // so quiz animations always run.
   // Stage 2.9 QOL: text-size segmented control. Each .qz-text-size-btn
   // carries data-size in {sm, md, lg, xl}; clicking commits to q.textScale,
   // persists, and re-renders so the active button highlights and the modal
@@ -42607,40 +44405,10 @@ function _quizRenderPrequiz(m) {
       }
     });
   }
-  // Stage 2.8 QOL: download reported-questions queue as JSON.
-  const reportsExportBtn = m.querySelector('#qz-reports-export');
-  if (reportsExportBtn) {
-    reportsExportBtn.addEventListener('click', (ev) => {
-      ev.stopPropagation();
-      const reports = _emsqStats.getReports() || [];
-      if (!reports.length) return;
-      try {
-        const blob = new Blob([JSON.stringify(reports, null, 2)],
-                              {type: 'application/json'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-        a.href = url;
-        a.download = 'emsq-reports-' + ts + '.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        // Offer to clear after a successful download.
-        const clr = window.confirm(
-          'Downloaded ' + reports.length + ' report' +
-          (reports.length === 1 ? '' : 's') + '.\n\n' +
-          'Clear the queue from this device now?');
-        if (clr) {
-          _emsqStats.clearReports();
-          _quizRenderPhase();
-        }
-      } catch (e) {
-        try { console && console.error && console.error('[reports export]', e); }
-        catch (e2) {}
-      }
-    });
-  }
+  // Stage 3: per user request, the reports-export feature is removed.
+  // The "REPORTS" button render was deleted above; the click handler is
+  // also gone. Existing reports in localStorage are harmless (just
+  // unread) \u2014 they'll naturally clear when the user resets stats.
   m.querySelectorAll('.qz-cat').forEach(el => {
     el.addEventListener('click', () => {
       if (el.disabled) return;
@@ -42912,16 +44680,6 @@ function _quizRenderQuiz(m) {
           '</span>' +
           '<span>' + (q.fullscreen ? 'EXIT FS' : 'FULLSCREEN') + '</span>' +
         '</button>' +
-        // Stage 2.8 QOL: report-question button. Opens a small inline
-        // textarea so the player can describe what's wrong (typo, unclear,
-        // disputed answer). Submissions land in localStorage and the
-        // author can download them from the prequiz banner.
-        '<button id="qz-report" style="background:transparent; border:none; ' +
-          'cursor:pointer; padding:4px 6px; color:#a8a08a; ' +
-          'font-size:14px; font-family:inherit;" ' +
-          'title="Report a problem with this question">' +
-          '\u26a0' +
-        '</button>' +
       '</div>' +
     '</div>' +
     // Stage 2.8 QOL: progress bar across full width.
@@ -43024,29 +44782,10 @@ function _quizRenderQuiz(m) {
   // Stage 2.8 QOL: report-question handler. Opens a small inline prompt
   // (browser prompt is unobtrusive and works without DOM rewriting).
   // Comment is optional; pressing Cancel skips entirely.
-  const reportBtn = m.querySelector('#qz-report');
-  if (reportBtn) {
-    reportBtn.addEventListener('click', () => {
-      const qq = q.questions[idx];
-      if (!qq) return;
-      const note = window.prompt(
-        'Report a problem with this question?\n\n' +
-        'What\u2019s wrong? (typo, unclear wording, disputed answer, etc.)\n' +
-        'Leave blank if you just want to mark it for the author to revisit.',
-        '');
-      if (note === null) return; // user cancelled
-      try { _emsqStats.addReport(q.role, qq.id, note); } catch (e) {}
-      // Subtle confirmation: briefly recolor the icon.
-      reportBtn.style.color = '#0a7a52';
-      reportBtn.title = 'Reported \u2713';
-      setTimeout(() => {
-        if (reportBtn && reportBtn.parentNode) {
-          reportBtn.style.color = '#a8a08a';
-          reportBtn.title = 'Report a problem with this question';
-        }
-      }, 1500);
-    });
-  }
+  // Stage 3: per user request, the per-question "Report a problem" feature
+  // is removed. The button render was deleted above; the handler block is
+  // also gone. _emsqStats.addReport() is no longer called from anywhere
+  // user-facing.
   // Stage 2.7: fullscreen toggle. Flips game._quiz.fullscreen and re-runs
   // _quizApplyModalSize. Also calls the native Fullscreen API when entering
   // fullscreen so the browser chrome can also collapse for a true full
@@ -45753,6 +47492,20 @@ function setupSelect() {
       if (cat) pkmShowSubmenu(cat);
     });
   });
+  // Stage 3 fix: the scene-phase menu (#pkm-menu-scene) lives in a separate
+  // container from the main #pkm-menu, so the selector above missed its
+  // SCENE ASSESSMENT button entirely — it rendered but did nothing on
+  // click. CONTINUE ONTO SCENE has its own wiring (_s8WireSceneContinueOnce);
+  // here we wire any data-cat buttons inside #pkm-menu-scene the same way
+  // the main menu wires them. Skip #pkm-scene-continue so we don't bind
+  // it twice (it doesn't carry a data-cat, but the guard is cheap and safe).
+  document.querySelectorAll('#pkm-menu-scene .pkm-action').forEach((btn) => {
+    if (btn.id === 'pkm-scene-continue') return;
+    btn.addEventListener('click', () => {
+      const cat = btn.getAttribute('data-cat');
+      if (cat) pkmShowSubmenu(cat);
+    });
+  });
   // Stage 2.0b: BACK TO SCENE → close pkm overlay and drop the player
   // back to the on-scene world via the legacy backToScene flow. Patient
   // HP and treatments-given are preserved on game.pkm so the player can
@@ -46005,7 +47758,16 @@ function setupSelect() {
     }
   } catch (e) {}
   function persistAudioPrefs() {
-    try { localStorage.setItem('emsq_audio_prefs', JSON.stringify(audioPrefs)); } catch (e) {}
+    // Stage 3 perf: debounce the actual localStorage write. Sliders fire
+    // an 'input' event on every pixel of drag \u2014 writing JSON to
+    // localStorage on each one causes measurable stutter on lower-end
+    // hardware. Live audio bus updates still happen immediately via
+    // applyAudioPrefs(); only the persisted snapshot is debounced.
+    if (typeof _scheduleStorageSave === 'function') {
+      _scheduleStorageSave('emsq_audio_prefs', audioPrefs, 250);
+    } else {
+      try { localStorage.setItem('emsq_audio_prefs', JSON.stringify(audioPrefs)); } catch (e) {}
+    }
   }
   function applyAudioPrefs() {
     if (!audioCtx) return;     // bus not built yet — gets reapplied on shift start
@@ -46724,7 +48486,22 @@ function endShift() {
   // Stage 2.8 QOL: shift completed naturally — clear the resume save so
   // the title screen no longer offers a stale resume option.
   try { _saveClear(); _stopSaveHeartbeat(); _updateTitleResumeButton(); } catch (e) {}
-  document.getElementById('shift-end').style.display = 'flex';
+  // Stage 3 polish: fire the SHIFT COMPLETE banner first, then reveal the
+  // stats screen after the banner's hold beat. Same overlay infra as the
+  // call-outcome stamps, but green palette and a 2.4s duration so the
+  // "good work" wrap-up actually lands. Wrapped in try/catch so a stamp
+  // error can never block the shift-end screen from appearing.
+  let _shiftEndDelay = 0;
+  try {
+    if (typeof showResultStamp === 'function') {
+      const _sub = (game.patientsSaved > 0) ? 'GOOD WORK' : 'SHIFT ENDED';
+      showResultStamp('shiftComplete', { subtitle: _sub });
+      _shiftEndDelay = 2200;
+    }
+  } catch (_eSc) {}
+  setTimeout(() => {
+    document.getElementById('shift-end').style.display = 'flex';
+  }, _shiftEndDelay);
 }
 // Stage 2.8 QOL: pointer that says "based on your quiz history, your
 // weakest area is X — drill it next time you're at the arcade."
@@ -46868,6 +48645,13 @@ function returnToSelect() {
   // Stage 1.5: return to the TITLE screen (not the build screen). The build
   // screen is now reached only via the title's PLAY button.
   document.getElementById('title-screen').style.display = 'flex';
+  // Stage 3: re-sync the walkthrough toggle. The flag may have auto-flipped
+  // off after a shift used the walkthrough; the checkbox should reflect that
+  // when the player gets back to the title screen.
+  try {
+    const wtCb = document.getElementById('title-walkthrough-cb');
+    if (wtCb) wtCb.checked = _walkthroughFirstCallEnabled();
+  } catch (_eWtRefresh) {}
   document.getElementById('select-screen').style.display = 'none';
   document.getElementById('howto-screen').style.display = 'none';
   // Stage 1.6 fix: ensure credits overlay is closed when bouncing back to title.
